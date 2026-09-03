@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum Role {
+  TEAM_MEMBER
+  MANAGER
+  ADMIN
+}
+
+enum ReportVersionStatus {
+  DRAFT
+  SUBMITTED
+  NEEDS_CORRECTION
+  APPROVED
+}
+
+enum TaskType {
+  DEVELOPMENT
+  TESTING
+  MEETING
+  DOCUMENTATION
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String
+  email        String   @unique
+  role         Role
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  projectsCreated Project[]        @relation("ProjectCreator")
+  assignments     AssignedEmployee[]
+  reportsCreated  Report[]
+  reviews         Comment[]
+
+  @@map("Users")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   Int      @map("created_by")
+  creator     User     @relation("ProjectCreator", fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  assignments AssignedEmployee[]
+  reports     Report[]
+
+  @@map("Project")
+}
+
+model AssignedEmployee {
+  id        Int     @id @default(autoincrement())
+  projectId Int     @map("project_id")
+  userId    Int     @map("user_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("Assigned_Employees")
+}
+
+model Report {
+  id                Int      @id @default(autoincrement())
+  projectId         Int      @map("project_id")
+  currentVersionId  Int?     @unique @map("current_version_id")
+  name              String
+  startDate         DateTime @map("start_date") @db.Date
+  endDate           DateTime @map("end_date") @db.Date
+  status            ReportVersionStatus
+  createdBy         Int      @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  project        Project        @relation(fields: [projectId], references: [id])
+  creator        User           @relation(fields: [createdBy], references: [id])
+  currentVersion ReportVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  versions       ReportVersion[] @relation("ReportVersions")
+
+  @@map("Report")
+}
+
+model ReportVersion {
+  id           Int       @id @default(autoincrement())
+  reportId     Int       @map("report_id")
+  status       ReportVersionStatus
+  submittedAt  DateTime? @map("submitted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  report       Report    @relation("ReportVersions", fields: [reportId], references: [id], onDelete: Cascade)
+  currentOf    Report?   @relation("CurrentVersion")
+
+  tasks         Task[]
+  blockers      Blocker[]
+  achievements  Achievement[]
+  comments      Comment[]
+  notes         OptionalNote[]
+
+  @@map("report_version")
+}
+
+model Task {
+  id               Int      @id @default(autoincrement())
+  name             String
+  reportVersionId  Int      @map("report_version_id")
+  priority         String
+  type             TaskType
+  status           String
+  plannedProgress  Int      @map("planned_progress")
+  actualProgress   Int      @map("actual_progress")
+  timePlanned      Decimal  @map("time_planned") @db.Decimal(6, 2)
+  timeSpent        Decimal  @map("time_spent") @db.Decimal(6, 2)
+  output           String?
+  isFutureTask     Boolean  @map("is_future_task")
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id], onDelete: Cascade)
+
+  @@map("Tasks")
+}
+
+model Blocker {
+  id              Int      @id @default(autoincrement())
+  reportVersionId Int      @map("report_version_id")
+  name            String
+  isKeyIssue      Boolean  @map("is_key_issue")
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id], onDelete: Cascade)
+
+  @@map("Blockers")
+}
+
+model Achievement {
+  id                Int      @id @default(autoincrement())
+  reportVersionId   Int      @map("report_version_id")
+  name              String
+  isKeyAchievement  Boolean  @map("is_key_achievement")
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id], onDelete: Cascade)
+
+  @@map("Achievements")
+}
+
+model Comment {
+  id              Int      @id @default(autoincrement())
+  reportVersionId Int      @map("report_version_id")
+  reviewerId      Int      @map("reviewer_id")
+  action          String
+  comment         String
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id], onDelete: Cascade)
+  reviewer      User          @relation(fields: [reviewerId], references: [id])
+
+  @@map("Comments")
+}
+
+model OptionalNote {
+  id              Int    @id @default(autoincrement())
+  reportVersionId Int    @map("report_version_id")
+  content         String
+
+  reportVersion ReportVersion @relation(fields: [reportVersionId], references: [id], onDelete: Cascade)
+
+  @@map("optional_notes")
+}
