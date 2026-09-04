@@ -1,26 +1,387 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =========================================================
+   LIGHT THEME
+   Weekly Team Report Management Tool
+   Brand:
+   Navy       #021F59
+   Blue       #035AA6
+   Tangerine  #F28705
+   Persimmon  #F25C05
+========================================================= */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base */
+  --background: oklch(0.984 0.003 248);
+  --foreground: oklch(0.264 0.11 261);
+
+  /* Cards */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.264 0.11 261);
+
+  /* Popover */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.264 0.11 261);
+
+  /* =========================================================
+     BRAND
+  ========================================================= */
+
+  /* Persian Blue - #035AA6 */
+  --primary: oklch(0.467 0.142 253);
+  --primary-foreground: oklch(1 0 0);
+
+  /* Soft Blue Surface */
+  --secondary: oklch(0.963 0.018 251);
+  --secondary-foreground: oklch(0.264 0.11 261);
+
+  /* Neutral interactive surface */
+  --accent: oklch(0.968 0.007 248);
+  --accent-foreground: oklch(0.264 0.11 261);
+
+  /* Muted */
+  --muted: oklch(0.968 0.007 248);
+  --muted-foreground: oklch(0.556 0.025 250);
+
+  /* Borders */
+  --border: oklch(0.92 0.008 250);
+  --input: oklch(0.92 0.008 250);
+
+  /* Focus */
+  --ring: oklch(0.467 0.142 253);
+
+  /* Destructive */
+  /* Persimmon - #F25C05 */
+  --destructive: oklch(0.663 0.199 42);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* =========================================================
+     CHART COLORS
+  ========================================================= */
+
+  /* Persian Blue */
+  --chart-1: oklch(0.467 0.142 253);
+
+  /* Navy */
+  --chart-2: oklch(0.264 0.11 261);
+
+  /* Tangerine */
+  --chart-3: oklch(0.725 0.17 59);
+
+  /* Persimmon */
+  --chart-4: oklch(0.663 0.199 42);
+
+  /* Green */
+  --chart-5: oklch(0.65 0.17 150);
+
+  /* =========================================================
+     SIDEBAR
+  ========================================================= */
+
+  /* Cool Black / Navy - #021F59 */
+  --sidebar: oklch(0.264 0.11 261);
+
+  --sidebar-foreground: oklch(0.96 0.01 250);
+
+  /* Persian Blue */
+  --sidebar-primary: oklch(0.467 0.142 253);
+
+  --sidebar-primary-foreground: oklch(1 0 0);
+
+  /* Sidebar Hover */
+  --sidebar-accent: oklch(0.34 0.1 261);
+
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
+
+  --sidebar-border: oklch(0.35 0.08 261);
+
+  --sidebar-ring: oklch(0.467 0.142 253);
+
+  /* =========================================================
+     CUSTOM SEMANTIC COLORS
+     Use these for reports and workflow statuses
+  ========================================================= */
+
+  /* Brand */
+  --brand-navy: #021f59;
+  --brand-blue: #035aa6;
+  --brand-tangerine: #f28705;
+  --brand-persimmon: #f25c05;
+
+  /* Report Status */
+
+  /* Draft */
+  --status-draft: #64748b;
+  --status-draft-bg: #f1f5f9;
+
+  /* Submitted */
+  --status-submitted: #035aa6;
+  --status-submitted-bg: #eaf4ff;
+
+  /* Needs Correction */
+  --status-correction: #f28705;
+  --status-correction-bg: #fff4e5;
+
+  /* Approved */
+  --status-approved: #16a34a;
+  --status-approved-bg: #dcfce7;
+
+  /* Not Started */
+  --status-not-started: #94a3b8;
+  --status-not-started-bg: #f8fafc;
+
+  /* Critical */
+  --status-critical: #f25c05;
+  --status-critical-bg: #fff1eb;
+
+  /* Info */
+  --status-info: #035aa6;
+  --status-info-bg: #eaf4ff;
 }
+
+/* =========================================================
+   TAILWIND THEME MAPPING
+========================================================= */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --font-bubbl: var(--font-bubbl);
+
+  /* Sidebar */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  /* Charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Shadcn */
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+
+  --color-destructive: var(--destructive);
+
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* =========================================================
+     CUSTOM BRAND COLORS
+  ========================================================= */
+
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-tangerine: var(--brand-tangerine);
+  --color-brand-persimmon: var(--brand-persimmon);
+
+  /* =========================================================
+     REPORT STATUS COLORS
+  ========================================================= */
+
+  --color-status-draft: var(--status-draft);
+  --color-status-draft-bg: var(--status-draft-bg);
+
+  --color-status-submitted: var(--status-submitted);
+  --color-status-submitted-bg: var(--status-submitted-bg);
+
+  --color-status-correction: var(--status-correction);
+  --color-status-correction-bg: var(--status-correction-bg);
+
+  --color-status-approved: var(--status-approved);
+  --color-status-approved-bg: var(--status-approved-bg);
+
+  --color-status-not-started: var(--status-not-started);
+  --color-status-not-started-bg: var(--status-not-started-bg);
+
+  --color-status-critical: var(--status-critical);
+  --color-status-critical-bg: var(--status-critical-bg);
+
+  --color-status-info: var(--status-info);
+  --color-status-info-bg: var(--status-info-bg);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* =========================================================
+   DARK THEME
+========================================================= */
+
+.dark {
+  /* Base */
+
+  --background: oklch(0.17 0.04 261);
+  --foreground: oklch(0.96 0.01 250);
+
+  /* Cards */
+
+  --card: oklch(0.22 0.045 261);
+  --card-foreground: oklch(0.96 0.01 250);
+
+  /* Popover */
+
+  --popover: oklch(0.22 0.045 261);
+  --popover-foreground: oklch(0.96 0.01 250);
+
+  /* =========================================================
+     BRAND
+  ========================================================= */
+
+  /* Brighter Persian Blue */
+
+  --primary: oklch(0.62 0.15 253);
+  --primary-foreground: oklch(0.16 0.04 261);
+
+  --secondary: oklch(0.27 0.055 261);
+  --secondary-foreground: oklch(0.96 0.01 250);
+
+  --accent: oklch(0.28 0.055 261);
+  --accent-foreground: oklch(0.98 0.005 250);
+
+  /* Muted */
+
+  --muted: oklch(0.26 0.035 261);
+  --muted-foreground: oklch(0.7 0.025 250);
+
+  /* Borders */
+
+  --border: oklch(0.35 0.035 261);
+  --input: oklch(0.35 0.035 261);
+
+  /* Focus */
+
+  --ring: oklch(0.62 0.15 253);
+
+  /* Destructive */
+
+  --destructive: oklch(0.68 0.19 42);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* =========================================================
+     CHART COLORS
+  ========================================================= */
+
+  --chart-1: oklch(0.62 0.15 253);
+  --chart-2: oklch(0.72 0.1 250);
+  --chart-3: oklch(0.75 0.17 59);
+  --chart-4: oklch(0.68 0.19 42);
+  --chart-5: oklch(0.72 0.16 150);
+
+  /* =========================================================
+     SIDEBAR
+  ========================================================= */
+
+  --sidebar: oklch(0.145 0.055 261);
+
+  --sidebar-foreground: oklch(0.96 0.01 250);
+
+  --sidebar-primary: oklch(0.58 0.15 253);
+
+  --sidebar-primary-foreground: oklch(1 0 0);
+
+  --sidebar-accent: oklch(0.24 0.07 261);
+
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
+
+  --sidebar-border: oklch(0.3 0.05 261);
+
+  --sidebar-ring: oklch(0.58 0.15 253);
+
+  /* =========================================================
+     DARK STATUS COLORS
+  ========================================================= */
+
+  --status-draft: #94a3b8;
+  --status-draft-bg: #1e293b;
+
+  --status-submitted: #60a5fa;
+  --status-submitted-bg: #102a43;
+
+  --status-correction: #fbbf24;
+  --status-correction-bg: #3b2a0a;
+
+  --status-approved: #4ade80;
+  --status-approved-bg: #123d25;
+
+  --status-not-started: #64748b;
+  --status-not-started-bg: #1e293b;
+
+  --status-critical: #fb7a36;
+  --status-critical-bg: #421b0d;
+
+  --status-info: #60a5fa;
+  --status-info-bg: #102a43;
+
+  --font-bubbl: "Plus Jakarta Sans", sans-serif;
+}
+
+/* =========================================================
+   BASE STYLES
+========================================================= */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--brand-blue) 20%, transparent);
+  }
 }

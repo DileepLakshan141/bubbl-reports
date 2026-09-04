@@ -1,0 +1,4 @@
+NEST_API_URL="your-backend-api-url-here"
+
+ACCESS_TOKEN_COOKIE="access_token_cookie_name"
+ACCESS_TOKEN_MAX_AGE=900
