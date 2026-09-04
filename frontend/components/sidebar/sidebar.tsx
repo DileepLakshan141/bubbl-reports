@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ChevronRight } from "lucide-react";
 
 import {
@@ -20,13 +20,27 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 import { sidebarData, type NavItem } from "./sidebar-data";
+import { logoutUser } from "../../lib/services/logout";
+import { useAppDispatch } from "../../store/hooks";
+import { clearUser } from "../../store/authSlice";
+import { toast } from "sonner";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
-  function handleLogout() {
-    console.log("Logout clicked");
-  }
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      dispatch(clearUser());
+      toast.success("Logged out successfully!");
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      toast.error("An error occurred during logout.");
+    }
+  };
 
   function isActiveRoute(item: NavItem) {
     if (item.url === "/dashboard") {
@@ -61,7 +75,7 @@ export function AppSidebar() {
             hover:bg-white/5
           "
         >
-          <div className="flex flex-col">
+          <div className="w-full flex flex-col justify-center items-center">
             <h1
               className="
                 font-bubbl
@@ -88,16 +102,7 @@ export function AppSidebar() {
           <SidebarGroup key={group.label} className="mb-3 px-0">
             {/* Group Label */}
 
-            <SidebarGroupLabel
-              className="
-                mb-2
-                px-3
-                text-[10px]
-                font-semibold
-                tracking-[0.16em]
-                text-blue-200/50
-              "
-            >
+            <SidebarGroupLabel className="text-xs font-semibold">
               {group.label}
             </SidebarGroupLabel>
 
@@ -112,125 +117,18 @@ export function AppSidebar() {
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        className={`
-                          group
-                          relative
-                          h-11
-                          overflow-hidden
-                          rounded-xl
-                          border
-                          transition-all
-                          duration-300
-
-                          ${
-                            isActive
-                              ? `
-                                border-white/15
-                                bg-white/15
-                                text-white
-                                shadow-lg
-                                shadow-black/10
-                                backdrop-blur-xl
-                              `
-                              : `
-                                border-transparent
-                                bg-white/[0.025]
-                                text-blue-100/70
-                                hover:border-white/10
-                                hover:bg-white/[0.08]
-                                hover:text-white
-                                hover:backdrop-blur-md
-                              `
-                          }
-                        `}
+                        className="py-5 px-2"
                       >
-                        <Link
-                          href={item.url}
-                          className="
-                            flex
-                            w-full
-                            items-center
-                            gap-3
-                            px-3
-                          "
-                        >
-                          {/* Active Glow */}
-
-                          {isActive && (
-                            <span
-                              className="
-                                absolute
-                                left-0
-                                top-1/2
-                                h-6
-                                w-1
-                                -translate-y-1/2
-                                rounded-r-full
-                                bg-[#035AA6]
-                                shadow-lg
-                                shadow-[#035AA6]
-                              "
-                            />
-                          )}
-
+                        <div className="flex w-full h-auto items-center gap-2">
                           {/* Icon */}
-
-                          <div
-                            className={`
-                              flex
-                              size-8
-                              shrink-0
-                              items-center
-                              justify-center
-                              rounded-lg
-                              transition-all
-                              duration-300
-
-                              ${
-                                isActive
-                                  ? `
-                                    bg-[#035AA6]
-                                    text-white
-                                    shadow-md
-                                    shadow-[#035AA6]/40
-                                  `
-                                  : `
-                                    text-blue-200/70
-                                    group-hover:bg-white/10
-                                    group-hover:text-white
-                                  `
-                              }
-                            `}
-                          >
-                            <Icon size={17} strokeWidth={isActive ? 2.5 : 2} />
+                          <div className="ml-2">
+                            <Icon className="text-lg" />
                           </div>
-
                           {/* Title */}
-
-                          <span
-                            className="
-                              flex-1
-                              text-sm
-                              font-medium
-                            "
-                          >
+                          <span className="text-md font-bubbl">
                             {item.title}
                           </span>
-
-                          {/* Active Arrow */}
-
-                          {isActive && (
-                            <ChevronRight
-                              size={16}
-                              className="
-                                text-blue-200
-                                transition-transform
-                                duration-300
-                                group-hover:translate-x-1
-                              "
-                            />
-                          )}
-                        </Link>
+                        </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -283,14 +181,7 @@ export function AppSidebar() {
                   group-hover:text-white
                 "
               >
-                <LogOut
-                  size={18}
-                  className="
-                    transition-transform
-                    duration-300
-                    group-hover:-translate-x-0.5
-                  "
-                />
+                <LogOut size={18} />
               </div>
 
               <span className="flex-1 text-left font-semibold">Sign Out</span>

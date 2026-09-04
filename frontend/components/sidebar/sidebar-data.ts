@@ -59,6 +59,16 @@ export const sidebarData: SidebarGroupData[] = [
         url: "/dashboard/projects",
         icon: FolderBookmark,
       },
+      {
+        title: "Analytics",
+        url: "/dashboard/analytics",
+        icon: BarChart3,
+      },
+      {
+        title: "User Management",
+        url: "/dashboard/users",
+        icon: UserCog,
+      },
     ],
   },
 ];
