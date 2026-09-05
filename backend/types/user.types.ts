@@ -1,3 +1,5 @@
+import { Role } from '../src/generated/prisma/browser';
+
 export interface AuthenticatedUser {
   userId: string | number;
   email: string;
@@ -6,4 +8,9 @@ export interface AuthenticatedUser {
 
 export interface RequestWithUser extends Request {
   user?: AuthenticatedUser;
+}
+
+export interface RequestUser {
+  userId: number;
+  role: Role;
 }
