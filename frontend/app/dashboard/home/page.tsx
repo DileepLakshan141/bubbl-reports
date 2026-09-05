@@ -1,5 +1,7 @@
-const DashboardHome = () => {
-  return <div>this is the dashboard home...will be completed soon</div>;
+import DashboardHome from "../../../components/dashboard-home/dashboard-home";
+
+const HomePage = () => {
+  return <DashboardHome />;
 };
 
-export default DashboardHome;
+export default HomePage;

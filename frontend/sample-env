@@ -1,4 +1,6 @@
 NEST_API_URL="your-backend-api-url-here"
 
 ACCESS_TOKEN_COOKIE="access_token_cookie_name"
+JWT_ACCESS_SECRET="should be same as nest api access secret"
 ACCESS_TOKEN_MAX_AGE=900
+NODE_ENV=development

@@ -5,16 +5,34 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import UserInfo from "../../components/user-info/user-info";
+import { getSession } from "../../lib/session/session";
+import { redirect } from "next/navigation";
 
-export default function Page({ children }: { children: React.ReactNode }) {
+export default async function Page({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/no-access");
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex w-full h-16 shrink-0 items-center">
+          <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
+
             <Separator orientation="vertical" className="h-12" />
+
+            <div className="ml-auto">
+              <UserInfo />
+            </div>
           </div>
         </header>
         <Separator />
