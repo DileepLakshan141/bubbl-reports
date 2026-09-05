@@ -9,7 +9,7 @@ export const register = async (values: RegisterSchemaType) => {
     const { data } = await apiClient.post<{
       user: UserProfile;
       message?: string;
-    }>("/auth/register", values);
+    }>("/api/auth/register", values);
     return { success: true, user: data.user, message: data.message };
   } catch (error: any) {
     return {

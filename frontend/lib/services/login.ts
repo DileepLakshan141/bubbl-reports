@@ -9,7 +9,7 @@ export const login = async (values: LoginSchemaType) => {
     const { data } = await apiClient.post<{
       user: UserProfile;
       message?: string;
-    }>("/auth/login", values);
+    }>("/api/auth/login", values);
     return { success: true, user: data.user, message: data.message };
   } catch (error: any) {
     return {

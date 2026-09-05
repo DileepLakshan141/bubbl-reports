@@ -23,6 +23,10 @@ export async function getSession(): Promise<Session | null> {
   }
 }
 
+export async function getAccessToken(): Promise<string | undefined> {
+  return (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+}
+
 export function hasAccess(
   session: Session | null,
   allowedRoles: Role[],

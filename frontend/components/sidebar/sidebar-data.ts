@@ -37,6 +37,16 @@ export const sidebarData: SidebarGroupData[] = [
     ],
   },
   {
+    label: "PROJECTS",
+    items: [
+      {
+        title: "My Projects",
+        url: "/dashboard/projects",
+        icon: FolderBookmark,
+      },
+    ],
+  },
+  {
     label: "REPORTS",
     items: [
       {
@@ -54,11 +64,6 @@ export const sidebarData: SidebarGroupData[] = [
   {
     label: "MANAGEMENT",
     items: [
-      {
-        title: "Projects",
-        url: "/dashboard/projects",
-        icon: FolderBookmark,
-      },
       {
         title: "Analytics",
         url: "/dashboard/analytics",

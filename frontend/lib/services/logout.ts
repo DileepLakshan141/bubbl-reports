@@ -3,7 +3,9 @@ import { apiClient } from "@/lib/axios/client";
 
 export async function logoutUser() {
   try {
-    const { data } = await apiClient.post<{ success: boolean }>("/auth/logout");
+    const { data } = await apiClient.post<{ success: boolean }>(
+      "/api/auth/logout",
+    );
     return data;
   } catch (error: any) {
     return {
