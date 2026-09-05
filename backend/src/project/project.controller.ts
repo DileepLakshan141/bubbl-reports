@@ -40,6 +40,11 @@ export class ProjectsController {
     return this.projectsService.findOne(id, req.user);
   }
 
+  @Get(':id/assigned-projects')
+  findAssignedProjects(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.projectsService.assignedProjects(id, req.user);
+  }
+
   @Roles(Role.MANAGER, Role.ADMIN)
   @Post(':id/assignments')
   assignEmployee(

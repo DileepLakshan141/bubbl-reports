@@ -89,6 +89,17 @@ export class ProjectsService {
     });
   }
 
+  async assignedProjects(userId: number, requester: RequestUser) {
+    return this.prisma.assignedEmployee.findMany({
+      where: { userId },
+      include: {
+        project: {
+          select: { id: true, name: true, description: true, createdAt: true },
+        },
+      },
+    });
+  }
+
   async removeEmployee(projectId: number, userId: number) {
     await this.ensureProjectExists(projectId);
     return this.prisma.assignedEmployee.deleteMany({

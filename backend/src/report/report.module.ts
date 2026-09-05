@@ -9,4 +9,4 @@ import { AchievementService } from '../achievement/achievement.service';
   controllers: [ReportController],
   providers: [ReportService, TaskService, BlockerService, AchievementService],
 })
-export class ReportsModule {}
+export class ReportModule {}
