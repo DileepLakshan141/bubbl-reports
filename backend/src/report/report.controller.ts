@@ -82,4 +82,10 @@ export class ReportController {
   ) {
     return this.reportsService.review(id, dto, req.user);
   }
+
+  @Roles(Role.MANAGER, Role.ADMIN)
+  @Get('team/:projectId')
+  findLatestByMember(@Param('projectId', ParseIntPipe) projectId: number) {
+    return this.reportsService.findLatestByMember(projectId);
+  }
 }

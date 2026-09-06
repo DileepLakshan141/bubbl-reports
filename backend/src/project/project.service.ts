@@ -36,6 +36,18 @@ export class ProjectsService {
         },
       });
     }
+
+    if (user.role === Role.MANAGER) {
+      return this.prisma.project.findMany({
+        where: { createdBy: user.userId },
+        include: {
+          assignments: {
+            include: { user: { select: { id: true, username: true } } },
+          },
+        },
+      });
+    }
+
     return this.prisma.project.findMany({
       include: {
         assignments: {
@@ -52,7 +64,6 @@ export class ProjectsService {
         assignments: {
           include: { user: { select: { id: true, username: true } } },
         },
-        creator: { select: { id: true, username: true } },
       },
     });
     if (!project) throw new NotFoundException('Project not found');
@@ -64,6 +75,11 @@ export class ProjectsService {
       if (!isAssigned)
         throw new ForbiddenException('You are not assigned to this project');
     }
+
+    if (user.role === Role.MANAGER && project.createdBy !== user.userId) {
+      throw new ForbiddenException('This project is not created by you');
+    }
+
     return project;
   }
 

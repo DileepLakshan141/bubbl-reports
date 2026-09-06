@@ -179,18 +179,21 @@ export class ReportService {
                 },
               })
             ).id;
-
-      await this.tasksService.createMany(tx, targetVersionId, normalizedTasks);
-      await this.blockersService.createMany(
+      await this.tasksService.replaceMany(tx, targetVersionId, normalizedTasks);
+      await this.blockersService.replaceMany(
         tx,
         targetVersionId,
         dto.blockers ?? [],
       );
-      await this.achievementsService.createMany(
+      await this.achievementsService.replaceMany(
         tx,
         targetVersionId,
         dto.achievements ?? [],
       );
+
+      await tx.optionalNote.deleteMany({
+        where: { reportVersionId: targetVersionId },
+      });
       if (dto.notes) {
         await tx.optionalNote.create({
           data: { reportVersionId: targetVersionId, content: dto.notes },
@@ -260,8 +263,14 @@ export class ReportService {
   }
 
   findAll(user: RequestUser, projectId?: number) {
-    const where: Prisma.ReportWhereInput =
-      user.role === Role.TEAM_MEMBER ? { createdBy: user.userId } : {};
+    const where: Prisma.ReportWhereInput = {};
+
+    if (user.role === Role.TEAM_MEMBER) {
+      where.createdBy = user.userId;
+    } else if (user.role === Role.MANAGER) {
+      where.project = { createdBy: user.userId };
+    }
+
     if (projectId) where.projectId = projectId;
 
     return this.prisma.report.findMany({
@@ -269,7 +278,7 @@ export class ReportService {
       include: {
         currentVersion: true,
         project: { select: { id: true, name: true } },
-        creator: { select: { id: true, username: true } }, // needed for "filed by" display
+        creator: { select: { id: true, username: true } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -353,5 +362,23 @@ export class ReportService {
         },
       },
     };
+  }
+
+  async findLatestByMember(projectId: number) {
+    const assignments = await this.prisma.assignedEmployee.findMany({
+      where: { projectId },
+      include: { user: { select: { id: true, username: true } } },
+    });
+
+    return Promise.all(
+      assignments.map(async (a) => {
+        const latestReport = await this.prisma.report.findFirst({
+          where: { projectId, createdBy: a.userId },
+          orderBy: { startDate: 'desc' },
+          include: { currentVersion: true },
+        });
+        return { user: a.user, latestReport };
+      }),
+    );
   }
 }
