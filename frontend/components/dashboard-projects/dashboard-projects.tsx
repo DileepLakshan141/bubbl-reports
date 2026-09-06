@@ -18,11 +18,12 @@ import CreateProjectDialog from "../project-dialogs/create-project-dialog";
 import ProjectCard from "../project-card/project-card";
 import UpdateProjectDialog from "../project-dialogs/update-project-dialog";
 import ArchiveProjectDialog from "../project-dialogs/archive-project-dialog";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [archivingProject, setArchivingProject] = useState<Project | null>(
@@ -86,7 +87,7 @@ const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
               <ProjectCard
                 key={project.id}
                 {...project}
-                onView={() => router.push(`/projects/${project.id}`)}
+                onView={() => router.push(`/dashboard/projects/${project.id}`)}
                 onUpdate={() => setEditingProjectId(project.id)}
                 onDelete={() => setArchivingProject(project)}
               />

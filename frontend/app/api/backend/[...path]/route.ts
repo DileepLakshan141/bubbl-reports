@@ -11,7 +11,6 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> },
 ) {
   const { path } = await params;
-  console.log(buildPath(path));
 
   return proxyToBackend(req, { path: buildPath(path) });
 }

@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-// components/dashboard-assigned-projects/dashboard-assigned-projects.tsx
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -101,7 +100,9 @@ const DashboardAssignedProjects = ({
               <ProjectCardReadOnly
                 key={item.id}
                 project={item.project}
-                onView={() => router.push(`/projects/${item.project.id}`)}
+                onView={() =>
+                  router.push(`/dashboard/projects/${item.project.id}`)
+                }
               />
             ))}
           </div>

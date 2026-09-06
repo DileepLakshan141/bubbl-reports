@@ -3,25 +3,12 @@ import { apiClient } from "../axios/client";
 import {
   CreateProjectInput,
   Project,
-  ProjectAssignments,
-  ProjectDisplayCard,
+  ProjectAssignment,
   UpdateProjectInput,
 } from "../types/project.types";
+import { handleApiError } from "../utils";
 
 const BASE_URL = "/api/backend/project";
-
-const handleApiError = (error: unknown, fallbackMessage: string) => {
-  if (error instanceof AxiosError) {
-    return {
-      success: false as const,
-      message: error.response?.data?.message || fallbackMessage,
-    };
-  }
-  return {
-    success: false as const,
-    message: fallbackMessage,
-  };
-};
 
 export const findAllProjects = async () => {
   try {
@@ -54,7 +41,7 @@ export const findProjectById = async (id: number) => {
 
 export const findAssignedProjects = async () => {
   try {
-    const { data } = await apiClient.get<ProjectAssignments[]>(
+    const { data } = await apiClient.get<ProjectAssignment[]>(
       `${BASE_URL}/assigned-projects`,
     );
     return { success: true as const, projects: data };

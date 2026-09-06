@@ -37,6 +37,7 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   assignments?: AssignedMember[];
+  creator?: { id: number; username: string };
 }
 export interface ProjectCardActions {
   onView?: () => void;
