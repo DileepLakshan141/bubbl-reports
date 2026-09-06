@@ -10,6 +10,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Patch,
 } from '@nestjs/common';
 import { ProjectsService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -18,6 +19,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/auth.guard';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('project')
@@ -35,14 +37,28 @@ export class ProjectsController {
     return this.projectsService.findAll(req.user);
   }
 
+  @Get('/assigned-projects')
+  findAssignedProjects(@Req() req) {
+    return this.projectsService.assignedProjects(req.user);
+  }
+
+  @Get('/created-projects')
+  createdByUser(@Req() req) {
+    return this.projectsService.createdByUser(req.user);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.projectsService.findOne(id, req.user);
   }
 
-  @Get(':id/assigned-projects')
-  findAssignedProjects(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return this.projectsService.assignedProjects(id, req.user);
+  @Roles(Role.MANAGER, Role.ADMIN)
+  @Patch(':id')
+  updateProject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProjectDto,
+  ) {
+    return this.projectsService.update(id, dto);
   }
 
   @Roles(Role.MANAGER, Role.ADMIN)

@@ -66,6 +66,14 @@ export class ProjectsService {
     return project;
   }
 
+  async createdByUser(user: RequestUser) {
+    const project = await this.prisma.project.findMany({
+      where: { createdBy: user.userId },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+    return project;
+  }
+
   async update(id: number, dto: UpdateProjectDto) {
     await this.ensureProjectExists(id);
     return this.prisma.project.update({
@@ -89,9 +97,9 @@ export class ProjectsService {
     });
   }
 
-  async assignedProjects(userId: number, requester: RequestUser) {
+  async assignedProjects(requester: RequestUser) {
     return this.prisma.assignedEmployee.findMany({
-      where: { userId },
+      where: { userId: requester.userId },
       include: {
         project: {
           select: { id: true, name: true, description: true, createdAt: true },
