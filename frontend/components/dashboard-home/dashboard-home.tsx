@@ -10,18 +10,23 @@ import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import EmptyTemplate from "../empty-template/empty-template";
 import { FileIcon, FoldersIcon } from "lucide-react";
 import { findAssignedProjects } from "@/lib/services/project";
-import { DashboardHomeProps, Project } from "@/lib/types/project.types";
+import {
+  DashboardHomeProps,
+  ProjectAssignments,
+} from "@/lib/types/project.types";
+import { Spinner } from "../ui/spinner";
+import ProjectCardReadOnly from "../project-card/project-card-read-only";
 
 const DashboardHome = ({ userId }: DashboardHomeProps) => {
   const email = useAppSelector((state) => state.auth.user?.email);
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectAssignments[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    findAssignedProjects(userId).then((result) => {
+    findAssignedProjects().then((result) => {
       if (cancelled) return;
       if (result.success) {
         setProjects(result.projects);
@@ -54,12 +59,12 @@ const DashboardHome = ({ userId }: DashboardHomeProps) => {
 
       {/* my projects */}
       <h1 className="text:text-xl md:text-2xl font-semibold font-bubbl mb-2 mx-3">
-        My Projects
+        Assigned Projects
       </h1>
       <Separator />
       {loading ? (
         <div className="w-full h-60 flex justify-center items-center text-muted-foreground text-sm">
-          Loading projects...
+          <Spinner className="size-8" />
         </div>
       ) : projects.length === 0 ? (
         <div className="w-full h-60 flex justify-start items-center">
@@ -73,26 +78,8 @@ const DashboardHome = ({ userId }: DashboardHomeProps) => {
       ) : (
         <ScrollArea className="w-full whitespace-nowrap rounded-md mt-2 mb-6">
           <div className="flex gap-4 pb-4">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/projects/${project.id}`}
-                className="shrink-0 w-64 rounded-lg border p-4 hover:border-primary transition-colors"
-              >
-                <h3 className="font-semibold truncate">{project.name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                  {project.description}
-                </p>
-                <span
-                  className={`inline-block mt-3 text-xs px-2 py-0.5 rounded-full ${
-                    project.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-zinc-100 text-zinc-600"
-                  }`}
-                >
-                  {project.isActive ? "Active" : "Archived"}
-                </span>
-              </Link>
+            {projects.map((item) => (
+              <ProjectCardReadOnly project={item.project} key={item.id} />
             ))}
           </div>
           <ScrollBar orientation="horizontal" />

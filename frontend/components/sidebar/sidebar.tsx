@@ -119,16 +119,18 @@ export function AppSidebar() {
                         isActive={isActive}
                         className="py-5 px-2"
                       >
-                        <div className="flex w-full h-auto items-center gap-2">
-                          {/* Icon */}
-                          <div className="ml-2">
-                            <Icon className="text-lg" />
+                        <Link href={item.url}>
+                          <div className="flex w-full h-auto items-center gap-2">
+                            {/* Icon */}
+                            <div className="ml-2">
+                              <Icon className="text-lg" />
+                            </div>
+                            {/* Title */}
+                            <span className="text-md font-bubbl">
+                              {item.title}
+                            </span>
                           </div>
-                          {/* Title */}
-                          <span className="text-md font-bubbl">
-                            {item.title}
-                          </span>
-                        </div>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );

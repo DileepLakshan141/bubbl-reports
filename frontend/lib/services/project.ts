@@ -3,6 +3,8 @@ import { apiClient } from "../axios/client";
 import {
   CreateProjectInput,
   Project,
+  ProjectAssignments,
+  ProjectDisplayCard,
   UpdateProjectInput,
 } from "../types/project.types";
 
@@ -30,6 +32,17 @@ export const findAllProjects = async () => {
   }
 };
 
+export const findProjectsCreatedByUser = async (userId: number) => {
+  try {
+    const { data } = await apiClient.get<Project[]>(
+      `${BASE_URL}/created-projects`,
+    );
+    return { success: true as const, projects: data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load projects.");
+  }
+};
+
 export const findProjectById = async (id: number) => {
   try {
     const { data } = await apiClient.get<Project>(`${BASE_URL}/${id}`);
@@ -39,10 +52,10 @@ export const findProjectById = async (id: number) => {
   }
 };
 
-export const findAssignedProjects = async (id: number) => {
+export const findAssignedProjects = async () => {
   try {
-    const { data } = await apiClient.get<Project[]>(
-      `${BASE_URL}/${id}/assigned-projects`,
+    const { data } = await apiClient.get<ProjectAssignments[]>(
+      `${BASE_URL}/assigned-projects`,
     );
     return { success: true as const, projects: data };
   } catch (error) {

@@ -10,6 +10,7 @@ import {
   Bell,
   BarChart3,
   LogOut,
+  MessageCircleDashedCheck,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -31,7 +32,7 @@ export const sidebarData: SidebarGroupData[] = [
     items: [
       {
         title: "Dashboard",
-        url: "/dashboard",
+        url: "/dashboard/home",
         icon: LayoutDashboard,
       },
     ],
@@ -43,6 +44,11 @@ export const sidebarData: SidebarGroupData[] = [
         title: "My Projects",
         url: "/dashboard/projects",
         icon: FolderBookmark,
+      },
+      {
+        title: "Assigned Projects",
+        url: "/dashboard/assigned-projects",
+        icon: MessageCircleDashedCheck,
       },
     ],
   },
