@@ -87,6 +87,9 @@ const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
               <ProjectCard
                 key={project.id}
                 {...project}
+                onReview={() =>
+                  router.push(`/dashboard/projects/${project.id}/team`)
+                }
                 onView={() => router.push(`/dashboard/projects/${project.id}`)}
                 onUpdate={() => setEditingProjectId(project.id)}
                 onDelete={() => setArchivingProject(project)}

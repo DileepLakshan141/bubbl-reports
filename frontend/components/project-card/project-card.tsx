@@ -1,4 +1,4 @@
-import { Eye, Pencil, Trash2, Calendar } from "lucide-react";
+import { Eye, Pencil, Trash2, Calendar, ScanSearch, Flag } from "lucide-react";
 import { Button } from "../ui/button";
 import { ProjectCardProps } from "../../lib/types/project.types";
 
@@ -18,8 +18,16 @@ function formatDate(dateString: string) {
 }
 
 const ProjectCard = (props: ProjectCardProps) => {
-  const { name, description, createdAt, onUpdate, onDelete, onView, isActive } =
-    props;
+  const {
+    name,
+    description,
+    createdAt,
+    onUpdate,
+    onDelete,
+    onView,
+    onReview,
+    isActive,
+  } = props;
 
   return (
     <div className="flex h-[340px] w-72 flex-col justify-between overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md">
@@ -60,6 +68,14 @@ const ProjectCard = (props: ProjectCardProps) => {
       <div className="w-full flex items-center justify-center gap-1.5 border-t bg-muted/20 px-4 py-2.5">
         <Button variant="outline" size="icon" onClick={onView} title="View">
           <Eye className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onReview}
+          title="Team Reports"
+        >
+          <Flag className="h-4 w-4" />
         </Button>
         <Button variant="outline" size="icon" onClick={onUpdate} title="Edit">
           <Pencil className="h-4 w-4" />

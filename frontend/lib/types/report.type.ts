@@ -130,3 +130,8 @@ export interface SaveDraftInput {
   achievements?: Achievement[];
   notes?: string;
 }
+
+export interface TeamMemberLatestReport {
+  user: { id: number; username: string };
+  latestReport: ReportListItem | null;
+}

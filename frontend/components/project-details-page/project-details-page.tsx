@@ -106,7 +106,11 @@ const ProjectDetail = ({ projectId, userId }: ProjectDetailProps) => {
       ) : (
         <div className="flex flex-col gap-2">
           {reports.map((report) => (
-            <ReportListRow key={report.id} report={report} />
+            <ReportListRow
+              key={report.id}
+              report={report}
+              currentUserId={userId}
+            />
           ))}
         </div>
       )}

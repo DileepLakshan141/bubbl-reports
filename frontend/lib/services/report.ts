@@ -8,6 +8,7 @@ import {
   ReviewReportInput,
   ReportListItem,
   SaveDraftInput,
+  TeamMemberLatestReport,
 } from "@/lib/types/report.type";
 import { handleApiError } from "../utils";
 
@@ -100,5 +101,16 @@ export const getReportsByProject = async (projectId: number) => {
     return { success: true as const, reports: data };
   } catch (error) {
     return handleApiError(error, "Failed to load reports.");
+  }
+};
+
+export const getTeamReports = async (projectId: number) => {
+  try {
+    const { data } = await apiClient.get<TeamMemberLatestReport[]>(
+      `${BASE_URL}/team/${projectId}`,
+    );
+    return { success: true as const, members: data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load team reports.");
   }
 };

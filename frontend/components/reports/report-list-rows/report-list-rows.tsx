@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ReportListItem } from "../../../lib/types/report.type";
 import ReportVersionsDialog from "../report-version-dialog/report-version-dialog";
+
+interface ReportListRowProps {
+  report: ReportListItem;
+  currentUserId: number;
+}
 
 function statusColor(status: string) {
   switch (status) {
@@ -18,15 +23,16 @@ function statusColor(status: string) {
   }
 }
 
-const ReportListRow = ({ report }: { report: ReportListItem }) => {
+const ReportListRow = ({ report, currentUserId }: ReportListRowProps) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
-  const isEditable =
-    report.status === "DRAFT" || report.status === "NEEDS_CORRECTION";
+  const isOwnEditableReport =
+    report.createdBy === currentUserId &&
+    (report.status === "DRAFT" || report.status === "NEEDS_CORRECTION");
 
   const handleClick = () => {
-    if (isEditable) {
+    if (isOwnEditableReport) {
       router.push(`/dashboard/reports/${report.id}/edit`);
     } else {
       setOpen(true);
@@ -51,14 +57,11 @@ const ReportListRow = ({ report }: { report: ReportListItem }) => {
           {report.status.replace("_", " ")}
         </span>
       </button>
-
-      {!isEditable && (
-        <ReportVersionsDialog
-          reportId={report.id}
-          open={open}
-          onOpenChange={setOpen}
-        />
-      )}
+      <ReportVersionsDialog
+        reportId={report.id}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </>
   );
 };

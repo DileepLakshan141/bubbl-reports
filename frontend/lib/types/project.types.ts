@@ -40,6 +40,7 @@ export interface Project {
   creator?: { id: number; username: string };
 }
 export interface ProjectCardActions {
+  onReview?: () => void;
   onView?: () => void;
   onUpdate?: () => void;
   onDelete?: () => void;
