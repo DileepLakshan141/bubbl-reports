@@ -16,6 +16,19 @@ export class AchievementService {
     });
   }
 
+  async replaceMany(
+    tx: Prisma.TransactionClient,
+    reportVersionId: number,
+    achievements: AchievementInput[],
+  ) {
+    await tx.achievement.deleteMany({ where: { reportVersionId } });
+    if (achievements.length) {
+      await tx.achievement.createMany({
+        data: achievements.map((a) => ({ ...a, reportVersionId })),
+      });
+    }
+  }
+
   findByVersion(tx: Prisma.TransactionClient, reportVersionId: number) {
     return tx.achievement.findMany({ where: { reportVersionId } });
   }

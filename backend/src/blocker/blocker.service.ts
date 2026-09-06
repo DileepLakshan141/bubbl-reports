@@ -16,6 +16,19 @@ export class BlockerService {
     });
   }
 
+  async replaceMany(
+    tx: Prisma.TransactionClient,
+    reportVersionId: number,
+    blockers: BlockerInput[],
+  ) {
+    await tx.blocker.deleteMany({ where: { reportVersionId } });
+    if (blockers.length) {
+      await tx.blocker.createMany({
+        data: blockers.map((b) => ({ ...b, reportVersionId })),
+      });
+    }
+  }
+
   findByVersion(tx: Prisma.TransactionClient, reportVersionId: number) {
     return tx.blocker.findMany({ where: { reportVersionId } });
   }

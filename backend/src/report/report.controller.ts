@@ -10,6 +10,7 @@ import {
   Patch,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ReportService } from './report.service';
 import { CreateDraftDto } from './dto/create-draft.dto';
@@ -20,9 +21,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/auth.guard';
 import { SubmitReportDto } from './dto/submit-report.dto';
+import { SaveDraftDto } from './dto/save-draft.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('reports')
+@Controller('report')
 export class ReportController {
   constructor(private reportsService: ReportService) {}
 
@@ -41,13 +43,25 @@ export class ReportController {
   }
 
   @Get()
-  findAll(@Req() req) {
-    return this.reportsService.findAll(req.user);
+  findAll(@Query('projectId') projectId: string | undefined, @Req() req) {
+    return this.reportsService.findAll(
+      req.user,
+      projectId ? Number(projectId) : undefined,
+    );
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.reportsService.findOne(id, req.user);
+  }
+
+  @Patch(':id/draft')
+  saveDraft(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SaveDraftDto,
+    @Req() req,
+  ) {
+    return this.reportsService.saveDraft(id, dto, req.user);
   }
 
   @Patch(':id')

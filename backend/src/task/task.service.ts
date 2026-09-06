@@ -15,6 +15,19 @@ export class TaskService {
     });
   }
 
+  async replaceMany(
+    tx: Prisma.TransactionClient,
+    reportVersionId: number,
+    tasks: TaskInput[],
+  ) {
+    await tx.task.deleteMany({ where: { reportVersionId } });
+    if (tasks.length) {
+      await tx.task.createMany({
+        data: tasks.map((t) => ({ ...t, reportVersionId })),
+      });
+    }
+  }
+
   findByVersion(tx: Prisma.TransactionClient, reportVersionId: number) {
     return tx.task.findMany({ where: { reportVersionId } });
   }

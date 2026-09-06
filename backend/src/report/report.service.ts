@@ -9,10 +9,11 @@ import { ReviewReportDto, ReviewAction } from './dto/review-report.dto';
 import { TaskService } from '../task/task.service';
 import { BlockerService } from '../blocker/blocker.service';
 import { AchievementService } from '../achievement/achievement.service';
-import { Role, ReportVersionStatus } from '../generated/prisma/client';
+import { Prisma, Role, ReportVersionStatus } from '../generated/prisma/client';
 import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftMetaDto } from './dto/update-draft-meta';
 import { SubmitReportDto } from './dto/submit-report.dto';
+import { SaveDraftDto } from './dto/save-draft.dto';
 
 interface RequestUser {
   userId: number;
@@ -62,6 +63,74 @@ export class ReportService {
       return tx.report.update({
         where: { id: report.id },
         data: { currentVersionId: version.id },
+        include: this.fullInclude(),
+      });
+    });
+  }
+
+  async saveDraft(reportId: number, dto: SaveDraftDto, user: RequestUser) {
+    const report = await this.prisma.report.findUnique({
+      where: { id: reportId },
+    });
+    if (!report) throw new NotFoundException('Report not found');
+
+    if (user.role === Role.TEAM_MEMBER && report.createdBy !== user.userId) {
+      throw new ForbiddenException('You do not have access to this report');
+    }
+    if (!report.currentVersionId) {
+      throw new BadRequestException('Report has no version to save against');
+    }
+
+    const currentVersion = await this.prisma.reportVersion.findUnique({
+      where: { id: report.currentVersionId },
+    });
+
+    if (
+      currentVersion?.status !== ReportVersionStatus.DRAFT &&
+      currentVersion?.status !== ReportVersionStatus.NEEDS_CORRECTION
+    ) {
+      throw new BadRequestException(
+        'Only a Draft or Needs Correction report can be saved this way',
+      );
+    }
+
+    const normalizedTasks = (dto.tasks ?? []).map((t) =>
+      t.isFutureTask ? { ...t, actualProgress: 0, timeSpent: 0 } : t,
+    );
+
+    return this.prisma.$transaction(async (tx) => {
+      await this.tasksService.replaceMany(
+        tx,
+        currentVersion.id,
+        normalizedTasks,
+      );
+      await this.blockersService.replaceMany(
+        tx,
+        currentVersion.id,
+        dto.blockers ?? [],
+      );
+      await this.achievementsService.replaceMany(
+        tx,
+        currentVersion.id,
+        dto.achievements ?? [],
+      );
+
+      await tx.optionalNote.deleteMany({
+        where: { reportVersionId: currentVersion.id },
+      });
+      if (dto.notes) {
+        await tx.optionalNote.create({
+          data: { reportVersionId: currentVersion.id, content: dto.notes },
+        });
+      }
+
+      return tx.report.update({
+        where: { id: reportId },
+        data: {
+          name: dto.name ?? undefined,
+          startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+          endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+        },
         include: this.fullInclude(),
       });
     });
@@ -190,14 +259,17 @@ export class ReportService {
     });
   }
 
-  findAll(user: RequestUser) {
-    const where =
+  findAll(user: RequestUser, projectId?: number) {
+    const where: Prisma.ReportWhereInput =
       user.role === Role.TEAM_MEMBER ? { createdBy: user.userId } : {};
+    if (projectId) where.projectId = projectId;
+
     return this.prisma.report.findMany({
       where,
       include: {
         currentVersion: true,
         project: { select: { id: true, name: true } },
+        creator: { select: { id: true, username: true } }, // needed for "filed by" display
       },
       orderBy: { updatedAt: 'desc' },
     });

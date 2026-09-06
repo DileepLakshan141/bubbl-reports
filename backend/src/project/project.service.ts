@@ -52,6 +52,7 @@ export class ProjectsService {
         assignments: {
           include: { user: { select: { id: true, username: true } } },
         },
+        creator: { select: { id: true, username: true } },
       },
     });
     if (!project) throw new NotFoundException('Project not found');
