@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ReportListItem } from "../../../lib/types/report.type";
 import ReportVersionsDialog from "../report-version-dialog/report-version-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 interface ReportListRowProps {
   report: ReportListItem;
@@ -45,11 +46,25 @@ const ReportListRow = ({ report, currentUserId }: ReportListRowProps) => {
         onClick={handleClick}
         className="w-full text-left rounded-lg border p-3 flex justify-between items-center hover:border-primary transition-colors"
       >
-        <div>
-          <p className="text-sm font-medium">{report.name}</p>
-          <p className="text-xs text-muted-foreground">
-            Filed by {report.creator.username}
-          </p>
+        <div className="flex gap-3">
+          <Avatar size="default">
+            <AvatarImage
+              src={`https://api.dicebear.com/10.x/loops/svg?seed=${report.creator.username}`}
+              alt={report.creator.username ?? "User"}
+            />
+            <AvatarFallback>
+              {report.creator.username?.charAt(0).toUpperCase() ?? "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium">{report.name}</p>
+            <p className="text-xs text-muted-foreground">
+              Filed by:{" "}
+              <span className="font-semibold italic capitalize">
+                {report.creator.username}
+              </span>
+            </p>
+          </div>
         </div>
         <span
           className={`text-xs px-2 py-0.5 rounded-full ${statusColor(report.status)}`}

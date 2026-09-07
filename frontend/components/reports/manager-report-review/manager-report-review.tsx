@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,6 +16,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectTrigger,
@@ -39,7 +39,8 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { getReport, reviewReport } from "@/lib/services/report";
-import { ReportVersion, Report } from "../../../lib/types/report.type";
+import { Report, ReportVersion } from "@/lib/types/report.type";
+import ReportContent from "../report-content/report-content";
 
 const PIE_COLORS = [
   "#378ADD",
@@ -49,7 +50,6 @@ const PIE_COLORS = [
   "#A32D2D",
   "#7F77DD",
 ];
-
 const toastStyle = {
   success: { style: { borderLeft: "4px solid #16a34a" } },
   error: { style: { borderLeft: "4px solid #dc2626" } },
@@ -66,7 +66,6 @@ const ManagerReportReview = ({
   const [report, setReport] = useState<Report | null>(null);
   const [version, setVersion] = useState<ReportVersion | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [pendingAction, setPendingAction] = useState<
     "APPROVE" | "NEEDS_CORRECTION" | null
   >(null);
@@ -74,51 +73,43 @@ const ManagerReportReview = ({
   const [commentError, setCommentError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const load = async () => {
-    const result = await getReport(reportId);
-    if (result.success) {
-      setReport(result.report);
-      setVersion(
-        result.report.versions.find((v) => v.id === versionId) ?? null,
-      );
-    } else {
-      toast.error(result.message, toastStyle.error);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    load();
+    getReport(reportId).then((result) => {
+      if (result.success) {
+        setReport(result.report);
+        setVersion(
+          result.report.versions.find((v) => v.id === versionId) ?? null,
+        );
+      } else {
+        toast.error(result.message, toastStyle.error);
+      }
+      setLoading(false);
+    });
   }, [reportId, versionId]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="w-full h-60 flex justify-center items-center">
         <Spinner className="size-8" />
       </div>
     );
-  }
-
-  if (!report || !version) {
+  if (!report || !version)
     return (
       <p className="text-center text-muted-foreground py-10">
         Version not found.
       </p>
     );
-  }
 
-  // Only the CURRENT version, while still SUBMITTED, can actually be reviewed —
-  // matches the backend's review() guard exactly (older/already-decided
-  // versions are for reading, not re-deciding).
   const canReview =
     report.currentVersionId === version.id && version.status === "SUBMITTED";
 
-  const progressData = version.tasks.map((t) => ({
-    name: t.name.length > 14 ? t.name.slice(0, 14) + "…" : t.name,
-    planned: t.plannedProgress,
-    actual: t.actualProgress,
-  }));
-
+  const progressData = version.tasks
+    .filter((t) => !t.isFutureTask)
+    .map((t) => ({
+      name: t.name.length > 14 ? t.name.slice(0, 14) + "…" : t.name,
+      planned: t.plannedProgress,
+      actual: t.actualProgress,
+    }));
   const statusCounts = version.tasks.reduce<Record<string, number>>(
     (acc, t) => {
       acc[t.status] = (acc[t.status] ?? 0) + 1;
@@ -130,7 +121,6 @@ const ManagerReportReview = ({
     name,
     value,
   }));
-
   const typeCounts = version.tasks.reduce<Record<string, number>>((acc, t) => {
     acc[t.type] = (acc[t.type] ?? 0) + 1;
     return acc;
@@ -151,19 +141,16 @@ const ManagerReportReview = ({
       setCommentError("Please explain what needs to change.");
       return;
     }
-
     setSubmitting(true);
     const result = await reviewReport(reportId, {
       action: pendingAction!,
       comment: comment.trim() || undefined,
     });
     setSubmitting(false);
-
     if (!result.success) {
       toast.error(result.message, toastStyle.error);
       return;
     }
-
     toast.success(
       pendingAction === "APPROVE"
         ? "Report approved"
@@ -179,16 +166,12 @@ const ManagerReportReview = ({
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
           <h1 className="text-lg font-semibold">{report.name}</h1>
-          <p className="text-xs text-muted-foreground">
-            Filed by {report.creator?.username ?? "team member"} ·{" "}
-            {version.status}
-          </p>
+          <p className="text-xs text-muted-foreground">{version.status}</p>
         </div>
-
-        {canReview ? (
+        {canReview && (
           <Select
-            onValueChange={(value) =>
-              openConfirm(value as "APPROVE" | "NEEDS_CORRECTION")
+            onValueChange={(v) =>
+              openConfirm(v as "APPROVE" | "NEEDS_CORRECTION")
             }
           >
             <SelectTrigger className="w-full sm:w-56">
@@ -201,129 +184,95 @@ const ManagerReportReview = ({
               </SelectItem>
             </SelectContent>
           </Select>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {report.currentVersionId !== version.id
-              ? "This is a past version — read only."
-              : `This version is already ${version.status.toLowerCase().replace("_", " ")}.`}
-          </p>
         )}
       </div>
 
       <Separator className="mb-6" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="rounded-lg border p-4">
-          <h2 className="text-sm font-semibold mb-3">
-            Planned vs actual progress
-          </h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={progressData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" fontSize={11} />
-              <YAxis domain={[0, 100]} fontSize={11} />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="planned"
-                stroke="#378ADD"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="actual"
-                stroke="#1D9E75"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      <Tabs defaultValue="completion">
+        <TabsList>
+          <TabsTrigger value="completion">Completion report</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-        <div className="rounded-lg border p-4">
-          <h2 className="text-sm font-semibold mb-3">Tasks by status</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={80}
-                label
-              >
-                {statusData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <TabsContent value="completion" className="pt-6">
+          <ReportContent
+            version={version}
+            creatorName={report.creator?.username}
+          />
+        </TabsContent>
 
-        <div className="rounded-lg border p-4 md:col-span-2">
-          <h2 className="text-sm font-semibold mb-3">Tasks by type</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={typeData}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={80}
-                label
-              >
-                {typeData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {version.blockers.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-sm font-semibold mb-3">Blockers</h2>
-          <ul className="list-disc list-inside text-sm space-y-1">
-            {version.blockers.map((b, i) => (
-              <li key={i}>
-                {b.name}
-                {b.isKeyIssue && " (key issue)"}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {version.achievements.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-sm font-semibold mb-3">Achievements</h2>
-          <ul className="list-disc list-inside text-sm space-y-1">
-            {version.achievements.map((a, i) => (
-              <li key={i}>
-                {a.name}
-                {a.isKeyAchievement && " (key achievement)"}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {version.comments.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold mb-3">Review history</h2>
-          <div className="flex flex-col gap-2">
-            {version.comments.map((c, i) => (
-              <div key={i} className="rounded-lg border p-3 text-sm">
-                <span className="text-xs font-medium">{c.action}</span>
-                <p className="mt-1">{c.comment}</p>
-              </div>
-            ))}
+        <TabsContent value="analytics" className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-lg border p-4">
+              <h2 className="text-sm font-semibold mb-3">
+                Planned vs actual progress
+              </h2>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={progressData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" fontSize={11} />
+                  <YAxis domain={[0, 100]} fontSize={11} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="planned"
+                    stroke="#378ADD"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="#1D9E75"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="rounded-lg border p-4">
+              <h2 className="text-sm font-semibold mb-3">Tasks by status</h2>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={80}
+                    label
+                  >
+                    {statusData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="rounded-lg border p-4 md:col-span-2">
+              <h2 className="text-sm font-semibold mb-3">Tasks by type</h2>
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={typeData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={80}
+                    label
+                  >
+                    {typeData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </section>
-      )}
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={pendingAction !== null}
@@ -337,11 +286,9 @@ const ManagerReportReview = ({
                 : "Request correction?"}
             </DialogTitle>
             <DialogDescription>
-              This action is not reversible. Please confirm and add a comment
-              for the record.
+              This action is not reversible.
             </DialogDescription>
           </DialogHeader>
-
           <Field>
             <FieldLabel htmlFor="review-comment">
               Comment {pendingAction === "NEEDS_CORRECTION" && "(required)"}
@@ -354,17 +301,11 @@ const ManagerReportReview = ({
                 setComment(e.target.value);
                 setCommentError(null);
               }}
-              placeholder={
-                pendingAction === "NEEDS_CORRECTION"
-                  ? "Explain what needs to change..."
-                  : "Optional note for the team member"
-              }
             />
             {commentError && (
               <FieldError errors={[{ message: commentError }]} />
             )}
           </Field>
-
           <DialogFooter>
             <DialogClose
               render={
@@ -380,8 +321,7 @@ const ManagerReportReview = ({
               onClick={confirmAction}
               disabled={submitting}
             >
-              {submitting && <Spinner className="mr-2 size-4" />}
-              Confirm
+              {submitting && <Spinner className="mr-2 size-4" />} Confirm
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,27 +1,54 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { createDraft, getReportsByProject } from "../../../lib/services/report";
+import { createDraft, getReportsByProject } from "@/lib/services/report";
 
 interface CreateReportButtonProps {
   projectId: number;
-  userId: number; // needed to scope the "already filed this week" check to the caller
+  userId: number | string;
   onCreated?: () => void;
 }
 
-function getCurrentWeekRange() {
+/**
+ * Returns YYYY-MM-DD in LOCAL time without ISO/UTC shifts
+ */
+function formatLocalISO(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentWeekISOStrings() {
   const now = new Date();
   const day = now.getDay();
+  // Adjust so Monday is day 0 of the week
   const diffToMonday = day === 0 ? -6 : 1 - day;
-  const start = new Date(now);
-  start.setDate(now.getDate() + diffToMonday);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
+
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  return {
+    startStr: formatLocalISO(monday),
+    endStr: formatLocalISO(sunday),
+  };
+}
+
+/**
+ * Normalizes date values (string/Date) into YYYY-MM-DD format
+ */
+function normalizeToISODate(dateVal: string | Date): string {
+  if (typeof dateVal === "string") {
+    // Slices "2026-09-07T00:00:00.000Z" or "2026-09-07" directly
+    return dateVal.slice(0, 10);
+  }
+  return formatLocalISO(dateVal);
 }
 
 const CreateReportButton = ({
@@ -47,14 +74,23 @@ const CreateReportButton = ({
         return;
       }
 
-      const { start, end } = getCurrentWeekRange();
+      const { startStr, endStr } = getCurrentWeekISOStrings();
 
-      // Only look at THIS user's own reports for this project — someone
-      // else on the team filing theirs must not disable my button.
-      const myReportsThisWeek = result.reports.filter((r) => {
-        if (r.createdBy !== userId) return false;
-        const reportStart = new Date(r.startDate);
-        return reportStart >= start && reportStart <= end;
+      const myReportsThisWeek = result.reports.filter((r: any) => {
+        const creatorId =
+          typeof r.createdBy === "object" && r.createdBy !== null
+            ? r.createdBy.id
+            : (r.createdBy ?? r.authorId ?? r.userId);
+
+        if (String(creatorId) !== String(userId)) return false;
+
+        const reportStartStr = normalizeToISODate(r.startDate);
+
+        const sundayBeforeMonday = new Date(startStr);
+        sundayBeforeMonday.setDate(sundayBeforeMonday.getDate() - 1);
+        const sundayStr = formatLocalISO(sundayBeforeMonday);
+
+        return reportStartStr >= sundayStr && reportStartStr <= endStr;
       });
 
       setDueThisWeek(myReportsThisWeek.length === 0);

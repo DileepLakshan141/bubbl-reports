@@ -24,10 +24,12 @@ export interface ProjectReadInfo {
   isActive: boolean;
   createdAt: string;
 }
+
 export interface ProjectAssignment {
   id: number;
   project: ProjectReadInfo;
 }
+
 export interface Project {
   id: number;
   name: string;
@@ -39,11 +41,13 @@ export interface Project {
   assignments?: AssignedMember[];
   creator?: { id: number; username: string };
 }
+
 export interface ProjectCardActions {
   onReview?: () => void;
   onView?: () => void;
   onUpdate?: () => void;
   onDelete?: () => void;
+  onTeamChanged?: () => void; // added: lets TeamManagementDialog trigger a parent refetch after assign/remove
 }
 
 export type ProjectCardProps = Project & ProjectCardActions;

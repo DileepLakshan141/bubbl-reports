@@ -101,7 +101,7 @@ const DashboardAssignedProjects = ({
                 key={item.id}
                 project={item.project}
                 onView={() =>
-                  router.push(`/dashboard/projects/${item.project.id}`)
+                  router.push(`/dashboard/assigned-projects/${item.project.id}`)
                 }
               />
             ))}

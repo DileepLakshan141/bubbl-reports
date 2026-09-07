@@ -71,13 +71,8 @@ export const sidebarData: SidebarGroupData[] = [
     label: "MANAGEMENT",
     items: [
       {
-        title: "Analytics",
-        url: "/dashboard/analytics",
-        icon: BarChart3,
-      },
-      {
         title: "User Management",
-        url: "/dashboard/users",
+        url: "/dashboard/admin/users",
         icon: UserCog,
       },
     ],

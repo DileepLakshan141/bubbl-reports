@@ -21,7 +21,7 @@ export interface LoginResponse {
 }
 
 export interface UserProfile {
-  id: string;
+  id: number;
   email: string;
   username: string;
   role: Role;
@@ -33,3 +33,5 @@ export interface AuthState {
   error: string | null;
   isVerified: boolean;
 }
+
+export type User = UserProfile;

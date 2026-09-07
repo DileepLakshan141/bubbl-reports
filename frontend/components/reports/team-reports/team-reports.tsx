@@ -47,7 +47,9 @@ const TeamReports = ({ projectId }: { projectId: number }) => {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-2 sm:px-0">
-      <h1 className="text-lg font-semibold mb-6">Team reports</h1>
+      <h1 className="text-2xl font-semibold mb-6 capitalize text-primary">
+        Team reports
+      </h1>
 
       <div className="flex flex-col gap-2">
         {members.map(({ user, latestReport }) => (
@@ -58,7 +60,7 @@ const TeamReports = ({ projectId }: { projectId: number }) => {
             className="w-full text-left rounded-lg border p-3 flex items-center gap-3 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <img
-              src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${user.username}`}
+              src={`https://api.dicebear.com/10.x/loops/svg?seed=${user.username}`}
               alt={user.username}
               className="w-10 h-10 rounded-full shrink-0"
             />
