@@ -117,28 +117,37 @@ export class ReportService {
     );
 
     return this.prisma.$transaction(async (tx) => {
-      await this.tasksService.replaceMany(
-        tx,
-        currentVersion.id,
-        normalizedTasks,
-      );
+      const targetVersionId =
+        currentVersion.status === ReportVersionStatus.DRAFT
+          ? currentVersion.id
+          : (
+              await tx.reportVersion.create({
+                data: {
+                  reportId,
+                  status: ReportVersionStatus.DRAFT,
+                  submittedAt: null,
+                },
+              })
+            ).id;
+
+      await this.tasksService.replaceMany(tx, targetVersionId, normalizedTasks);
       await this.blockersService.replaceMany(
         tx,
-        currentVersion.id,
+        targetVersionId,
         dto.blockers ?? [],
       );
       await this.achievementsService.replaceMany(
         tx,
-        currentVersion.id,
+        targetVersionId,
         dto.achievements ?? [],
       );
 
       await tx.optionalNote.deleteMany({
-        where: { reportVersionId: currentVersion.id },
+        where: { reportVersionId: targetVersionId },
       });
       if (dto.notes) {
         await tx.optionalNote.create({
-          data: { reportVersionId: currentVersion.id, content: dto.notes },
+          data: { reportVersionId: targetVersionId, content: dto.notes },
         });
       }
 
@@ -148,6 +157,7 @@ export class ReportService {
           name: dto.name ?? undefined,
           startDate: dto.startDate ? new Date(dto.startDate) : undefined,
           endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+          currentVersionId: targetVersionId, // now points to new
         },
         include: this.fullInclude(),
       });

@@ -54,6 +54,8 @@ import {
   DashboardInsights,
   ActivityItem,
 } from "@/lib/types/report.type";
+import SummaryCard from "../summary-metric-card/summary-metric-card";
+import { ActionBadge } from "../action-badge/action-badge";
 
 // Pie chart slices using themed chart variables
 const PIE_COLORS = [
@@ -191,7 +193,6 @@ const TeamDashboard = () => {
         />
       </div>
 
-      {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tasks Completed Trend */}
         <Card className="shadow-sm">
@@ -416,66 +417,6 @@ const TeamDashboard = () => {
       </Card>
     </div>
   );
-};
-
-// Summary Metric Cards
-const SummaryCard = ({
-  label,
-  value,
-  icon: Icon,
-  color,
-  bgColor,
-}: {
-  label: string;
-  value: number;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-}) => (
-  <Card className="shadow-sm">
-    <CardContent className="p-5 flex items-center justify-between">
-      <div>
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="text-2xl font-bold mt-1 tracking-tight">{value}</p>
-      </div>
-      <div className={`p-2.5 rounded-xl ${bgColor} ${color}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Activity Action Badges using defined custom CSS semantic tokens
-const ActionBadge = ({ action }: { action: string }) => {
-  switch (action) {
-    case "approved":
-      return (
-        <Badge
-          variant="outline"
-          className="text-[var(--status-approved)] bg-[var(--status-approved-bg)] border-transparent"
-        >
-          approved
-        </Badge>
-      );
-    case "submitted":
-      return (
-        <Badge
-          variant="outline"
-          className="text-[var(--status-submitted)] bg-[var(--status-submitted-bg)] border-transparent"
-        >
-          reviewed
-        </Badge>
-      );
-    default:
-      return (
-        <Badge
-          variant="outline"
-          className="text-[var(--status-correction)] bg-[var(--status-correction-bg)] border-transparent"
-        >
-          requested changes on
-        </Badge>
-      );
-  }
 };
 
 export default TeamDashboard;

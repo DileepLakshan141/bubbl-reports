@@ -239,7 +239,7 @@ const ManagerReportReview = ({
                     openConfirm(v as "APPROVE" | "NEEDS_CORRECTION")
                   }
                 >
-                  <SelectTrigger className="w-full sm:w-56 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                  <SelectTrigger className="w-full sm:w-56  transition-colors">
                     <SelectValue placeholder="Take Review Action" />
                   </SelectTrigger>
                   <SelectContent>
@@ -656,10 +656,8 @@ const ManagerReportReview = ({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={submitting}>
-                Cancel
-              </Button>
+            <DialogClose className="mr-2">
+              <div>Cancel</div>
             </DialogClose>
             <Button
               variant={
