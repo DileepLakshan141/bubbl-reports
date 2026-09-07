@@ -9,7 +9,7 @@ import {
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-// Existing, real users
+// Existing, real users (change according to your db users)
 const ADMIN_ID = 1;
 const TEAM_IDS = { patrick: 2, mark: 3, vihanga: 5, tharanga: 6 };
 const MANAGER_ID = 4;
