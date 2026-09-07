@@ -14,6 +14,7 @@ import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftMetaDto } from './dto/update-draft-meta';
 import { SubmitReportDto } from './dto/submit-report.dto';
 import { SaveDraftDto } from './dto/save-draft.dto';
+import { FindReportsQueryDto } from './dto/find-reports-query.dto';
 
 interface RequestUser {
   userId: number;
@@ -282,26 +283,44 @@ export class ReportService {
     });
   }
 
-  findAll(user: RequestUser, projectId?: number) {
+  async findAll(user: RequestUser, query: FindReportsQueryDto) {
+    const { projectId, submittedBy, status, page, limit } = query;
     const where: Prisma.ReportWhereInput = {};
 
     if (user.role === Role.TEAM_MEMBER) {
       where.createdBy = user.userId;
     } else if (user.role === Role.MANAGER) {
       where.project = { createdBy: user.userId };
+      if (submittedBy) where.createdBy = submittedBy;
+    } else {
+      if (submittedBy) where.createdBy = submittedBy;
     }
 
     if (projectId) where.projectId = projectId;
+    if (status) where.status = status;
 
-    return this.prisma.report.findMany({
-      where,
-      include: {
-        currentVersion: true,
-        project: { select: { id: true, name: true } },
-        creator: { select: { id: true, username: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const [reports, total] = await this.prisma.$transaction([
+      this.prisma.report.findMany({
+        where,
+        include: {
+          currentVersion: true,
+          project: { select: { id: true, name: true } },
+          creator: { select: { id: true, username: true } },
+        },
+        orderBy: { startDate: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.report.count({ where }),
+    ]);
+
+    return {
+      reports,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: number, user: RequestUser) {
@@ -315,6 +334,55 @@ export class ReportService {
       throw new ForbiddenException('You do not have access to this report');
     }
     return report;
+  }
+
+  async findVersionHistory(user: RequestUser, query: FindReportsQueryDto) {
+    const { projectId, submittedBy, status, page, limit } = query;
+
+    const reportWhere: Prisma.ReportWhereInput = {};
+    if (user.role === Role.TEAM_MEMBER) {
+      reportWhere.createdBy = user.userId;
+    } else if (user.role === Role.MANAGER) {
+      reportWhere.project = { createdBy: user.userId };
+      if (submittedBy) reportWhere.createdBy = submittedBy;
+    } else if (submittedBy) {
+      reportWhere.createdBy = submittedBy;
+    }
+    if (projectId) reportWhere.projectId = projectId;
+
+    const versionWhere: Prisma.ReportVersionWhereInput = {
+      report: reportWhere,
+      ...(status ? { status } : {}),
+    };
+
+    const [versions, total] = await this.prisma.$transaction([
+      this.prisma.reportVersion.findMany({
+        where: versionWhere,
+        include: {
+          report: {
+            select: {
+              id: true,
+              name: true,
+              startDate: true,
+              project: { select: { id: true, name: true } },
+              creator: { select: { id: true, username: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.reportVersion.count({ where: versionWhere }),
+    ]);
+
+    return {
+      versions,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async review(reportId: number, dto: ReviewReportDto, user: RequestUser) {

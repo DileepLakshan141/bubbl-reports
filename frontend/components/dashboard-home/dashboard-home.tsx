@@ -93,20 +93,6 @@ const DashboardHome = ({ userId }: DashboardHomeProps) => {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       )}
-
-      {/* my reports */}
-      <h1 className="text:text-xl md:text-2xl font-semibold font-bubbl mb-2 mx-3">
-        My Reports
-      </h1>
-      <Separator />
-      <div className="w-full h-60 flex justify-start items-center">
-        <EmptyTemplate
-          icon={FileIcon}
-          title="No Reports found!"
-          description="Looks like you have not create any report yet! Please check after you create some."
-          tailwindHeight="h-5"
-        />
-      </div>
     </div>
   );
 };

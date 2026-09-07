@@ -227,3 +227,18 @@ export interface ActivityItem {
   targetUsername: string;
   createdAt: string;
 }
+
+export interface ReportVersionHistoryItem {
+  id: number;
+  reportId: number;
+  status: string;
+  submittedAt: string | null;
+  createdAt: string;
+  report: {
+    id: number;
+    name: string;
+    startDate: string;
+    project: { id: number; name: string };
+    creator: { id: number; username: string };
+  };
+}

@@ -12,6 +12,7 @@ import {
   DashboardSummary,
   DashboardInsights,
   ActivityItem,
+  ReportVersionHistoryItem,
 } from "@/lib/types/report.type";
 import { handleApiError } from "../utils";
 
@@ -23,6 +24,71 @@ export const getReports = async () => {
     return { success: true, reports: data };
   } catch (error: any) {
     return handleApiError(error, "Error while getting the reports");
+  }
+};
+
+export const getReportsByProject = async (projectId: number) => {
+  try {
+    const { data } = await apiClient.get<{ reports: ReportListItem[] }>(
+      `${BASE_URL}?projectId=${projectId}&limit=100`,
+    );
+    return { success: true as const, reports: data.reports };
+  } catch (error) {
+    return handleApiError(error, "Failed to load reports.");
+  }
+};
+
+export interface ReportHistoryFilters {
+  projectId?: number;
+  submittedBy?: number;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+export const findReportHistory = async (filters: ReportHistoryFilters) => {
+  const query = new URLSearchParams();
+  if (filters.projectId) query.set("projectId", String(filters.projectId));
+  if (filters.submittedBy)
+    query.set("submittedBy", String(filters.submittedBy));
+  if (filters.status) query.set("status", filters.status);
+  query.set("page", String(filters.page ?? 1));
+  query.set("limit", String(filters.limit ?? 20));
+
+  try {
+    const { data } = await apiClient.get<{
+      reports: ReportListItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>(`${BASE_URL}?${query.toString()}`);
+    return { success: true as const, ...data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load report history.");
+  }
+};
+
+export const findVersionHistory = async (filters: ReportHistoryFilters) => {
+  const query = new URLSearchParams();
+  if (filters.projectId) query.set("projectId", String(filters.projectId));
+  if (filters.submittedBy)
+    query.set("submittedBy", String(filters.submittedBy));
+  if (filters.status) query.set("status", filters.status);
+  query.set("page", String(filters.page ?? 1));
+  query.set("limit", String(filters.limit ?? 20));
+
+  try {
+    const { data } = await apiClient.get<{
+      versions: ReportVersionHistoryItem[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>(`${BASE_URL}/history?${query.toString()}`);
+    return { success: true as const, ...data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load report history.");
   }
 };
 
@@ -93,17 +159,6 @@ export const reviewReport = async (id: number, values: ReviewReportInput) => {
       error,
       "Error while changing the state of the report",
     );
-  }
-};
-
-export const getReportsByProject = async (projectId: number) => {
-  try {
-    const { data } = await apiClient.get<ReportListItem[]>(
-      `${BASE_URL}?projectId=${projectId}`,
-    );
-    return { success: true as const, reports: data };
-  } catch (error) {
-    return handleApiError(error, "Failed to load reports.");
   }
 };
 

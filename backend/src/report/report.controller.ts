@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard';
 import { SubmitReportDto } from './dto/submit-report.dto';
 import { SaveDraftDto } from './dto/save-draft.dto';
 import * as userTypes from '../../types/user.types';
+import { FindReportsQueryDto } from './dto/find-reports-query.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('report')
@@ -77,11 +78,13 @@ export class ReportController {
   }
 
   @Get()
-  findAll(@Query('projectId') projectId: string | undefined, @Req() req) {
-    return this.reportsService.findAll(
-      req.user,
-      projectId ? Number(projectId) : undefined,
-    );
+  findAll(@Query() query: FindReportsQueryDto, @Req() req) {
+    return this.reportsService.findAll(req.user, query);
+  }
+
+  @Get('history')
+  findVersionHistory(@Query() query: FindReportsQueryDto, @Req() req) {
+    return this.reportsService.findVersionHistory(req.user, query);
   }
 
   @Get(':id')

@@ -4,6 +4,7 @@ import {
   UserCog,
   LogOut,
   MessageCircleDashedCheck,
+  FileCheckCorner,
 } from "lucide-react";
 import { SidebarGroupData } from "../../lib/types/auth.types";
 
@@ -32,6 +33,11 @@ export const sidebarData: SidebarGroupData[] = [
         url: "/dashboard/assigned-projects",
         icon: MessageCircleDashedCheck,
         roles: ["TEAM_MEMBER"],
+      },
+      {
+        title: "Report History",
+        url: "/dashboard/report-history",
+        icon: FileCheckCorner,
       },
     ],
   },
