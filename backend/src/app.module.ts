@@ -7,6 +7,7 @@ import { TaskModule } from './task/task.module';
 import { BlockerModule } from './blocker/blocker.module';
 import { AchievementModule } from './achievement/achievement.module';
 import { ReportModule } from './report/report.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReportModule } from './report/report.module';
     BlockerModule,
     AchievementModule,
     ReportModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],

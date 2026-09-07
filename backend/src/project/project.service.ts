@@ -86,6 +86,11 @@ export class ProjectsService {
   async createdByUser(user: RequestUser) {
     const project = await this.prisma.project.findMany({
       where: { createdBy: user.userId },
+      include: {
+        assignments: {
+          include: { user: { select: { id: true, username: true } } },
+        },
+      },
     });
     if (!project) throw new NotFoundException('Project not found');
     return project;

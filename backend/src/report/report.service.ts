@@ -39,14 +39,31 @@ export class ReportService {
     }
 
     const { start, end } = this.defaultWeekRange();
+    const targetStartDate = dto.startDate ? new Date(dto.startDate) : start;
+    const targetEndDate = dto.endDate ? new Date(dto.endDate) : end;
+
+    const existingReport = await this.prisma.report.findFirst({
+      where: {
+        projectId: dto.projectId,
+        createdBy: user.userId,
+        startDate: {
+          gte: targetStartDate,
+          lte: targetEndDate,
+        },
+      },
+    });
+
+    if (existingReport) {
+      throw new BadRequestException('A report already exists for this week');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const report = await tx.report.create({
         data: {
           projectId: dto.projectId,
           name: dto.name ?? `Week of ${start.toDateString()}`,
-          startDate: dto.startDate ? new Date(dto.startDate) : start,
-          endDate: dto.endDate ? new Date(dto.endDate) : end,
+          startDate: targetStartDate,
+          endDate: targetEndDate,
           status: ReportVersionStatus.DRAFT,
           createdBy: user.userId,
         },
