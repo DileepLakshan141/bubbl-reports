@@ -9,6 +9,9 @@ import {
   ReportListItem,
   SaveDraftInput,
   TeamMemberLatestReport,
+  DashboardSummary,
+  DashboardInsights,
+  ActivityItem,
 } from "@/lib/types/report.type";
 import { handleApiError } from "../utils";
 
@@ -112,5 +115,41 @@ export const getTeamReports = async (projectId: number) => {
     return { success: true as const, members: data };
   } catch (error) {
     return handleApiError(error, "Failed to load team reports.");
+  }
+};
+
+export const getDashboardSummary = async (week?: string) => {
+  try {
+    const { data } = await apiClient.get<DashboardSummary>(
+      `${BASE_URL}/dashboard/summary`,
+      { params: { week } },
+    );
+    return { success: true as const, summary: data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load dashboard summary.");
+  }
+};
+
+export const getDashboardInsights = async (weeks = 8) => {
+  try {
+    const { data } = await apiClient.get<DashboardInsights>(
+      `${BASE_URL}/dashboard/insights`,
+      { params: { weeks } },
+    );
+    return { success: true as const, insights: data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load dashboard insights.");
+  }
+};
+
+export const getRecentActivity = async (limit = 10) => {
+  try {
+    const { data } = await apiClient.get<ActivityItem[]>(
+      `${BASE_URL}/dashboard/activity`,
+      { params: { limit } },
+    );
+    return { success: true as const, activity: data };
+  } catch (error) {
+    return handleApiError(error, "Failed to load recent activity.");
   }
 };

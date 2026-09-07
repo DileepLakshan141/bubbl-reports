@@ -135,3 +135,95 @@ export interface TeamMemberLatestReport {
   user: { id: number; username: string };
   latestReport: ReportListItem | null;
 }
+export interface DashboardSummary {
+  totalSubmittedThisWeek: number;
+  compliance: {
+    submitted: number;
+    pending: number;
+  };
+  needsCorrectionCount: number;
+  openBlockersCount: number;
+}
+
+export interface TasksTrendPoint {
+  week: string;
+  completedCount: number;
+}
+
+export interface StatusByMember {
+  userId: number;
+  username: string;
+  draft: number;
+  submitted: number;
+  needsCorrection: number;
+  approved: number;
+}
+
+export interface WorkloadByProject {
+  projectId: number;
+  projectName: string;
+  taskCount: number;
+}
+
+export interface TimeByTaskType {
+  taskType: string;
+  hours: number;
+}
+
+export interface DashboardInsights {
+  tasksCompletedTrend: TasksTrendPoint[];
+  statusByMember: StatusByMember[];
+  workloadByProject: WorkloadByProject[];
+  timeByTaskType: TimeByTaskType[];
+}
+
+export interface ActivityItem {
+  id: number;
+  reportId: number;
+  action: "approved" | "needs_correction";
+  actorUsername: string;
+  targetUsername: string;
+  createdAt: string;
+}
+
+export interface TasksTrendPoint {
+  week: string;
+  completedCount: number;
+  userId?: number;
+}
+
+export interface StatusByMember {
+  userId: number;
+  username: string;
+  draft: number;
+  submitted: number;
+  needsCorrection: number;
+  approved: number;
+}
+
+export interface WorkloadByProject {
+  projectId: number;
+  projectName: string;
+  taskCount: number;
+}
+
+export interface TimeByTaskType {
+  taskType: string;
+  hours: number;
+}
+
+export interface DashboardInsights {
+  tasksCompletedTrend: TasksTrendPoint[];
+  statusByMember: StatusByMember[];
+  workloadByProject: WorkloadByProject[];
+  timeByTaskType: TimeByTaskType[];
+}
+
+export interface ActivityItem {
+  id: number;
+  reportId: number;
+  action: "submitted" | "approved" | "needs_correction";
+  actorUsername: string;
+  targetUsername: string;
+  createdAt: string;
+}

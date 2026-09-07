@@ -238,8 +238,11 @@ export class ReportService {
     });
   }
 
-  private defaultWeekRange() {
-    const now = new Date();
+  private defaultWeekRange(referenceDate?: string) {
+    const now = referenceDate ? new Date(referenceDate) : new Date();
+    if (isNaN(now.getTime())) {
+      throw new BadRequestException('Invalid week parameter');
+    }
     const day = now.getDay();
     const diffToMonday = day === 0 ? -6 : 1 - day;
     const start = new Date(now);
@@ -397,5 +400,299 @@ export class ReportService {
         return { user: a.user, latestReport };
       }),
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Dashboard: summary metrics
+  // ---------------------------------------------------------------------
+
+  async getDashboardSummary(week: string | undefined, user: RequestUser) {
+    const { start, end } = this.defaultWeekRange(week);
+    const projectScope = this.projectScopeFilter(user);
+
+    const [
+      submitted,
+      needsCorrection,
+      approved,
+      blockersCount,
+      expectedSubmitters,
+    ] = await Promise.all([
+      this.prisma.report.count({
+        where: {
+          ...projectScope,
+          startDate: { gte: start, lte: end },
+          status: ReportVersionStatus.SUBMITTED,
+        },
+      }),
+      this.prisma.report.count({
+        where: {
+          ...projectScope,
+          startDate: { gte: start, lte: end },
+          status: ReportVersionStatus.NEEDS_CORRECTION,
+        },
+      }),
+      this.prisma.report.count({
+        where: {
+          ...projectScope,
+          startDate: { gte: start, lte: end },
+          status: ReportVersionStatus.APPROVED,
+        },
+      }),
+      this.prisma.blocker.count({
+        where: {
+          reportVersion: {
+            currentOf: { isNot: null },
+            report: { ...projectScope, startDate: { gte: start, lte: end } },
+          },
+        },
+      }),
+      this.getExpectedSubmitters(user),
+    ]);
+
+    const submittedByExpected = await this.prisma.report.count({
+      where: {
+        ...projectScope,
+        startDate: { gte: start, lte: end },
+        createdBy: { in: expectedSubmitters.map((m) => m.id) },
+      },
+    });
+
+    return {
+      totalSubmittedThisWeek: submitted + needsCorrection + approved,
+      compliance: {
+        submitted: submitted + approved,
+        pending: Math.max(expectedSubmitters.length - submittedByExpected, 0),
+      },
+      needsCorrectionCount: needsCorrection,
+      openBlockersCount: blockersCount,
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Dashboard: charts
+  // ---------------------------------------------------------------------
+
+  async getDashboardInsights(weeks: number, user: RequestUser) {
+    const since = this.weeksAgo(weeks);
+    const projectScope = this.projectScopeFilter(user);
+
+    const [
+      tasksCompletedTrend,
+      statusByMember,
+      workloadByProject,
+      timeByTaskType,
+    ] = await Promise.all([
+      this.getTasksCompletedTrend(projectScope, since),
+      this.getStatusByMember(projectScope, since),
+      this.getWorkloadByProject(projectScope, since),
+      this.getTimeByTaskType(projectScope, since),
+    ]);
+
+    return {
+      tasksCompletedTrend,
+      statusByMember,
+      workloadByProject,
+      timeByTaskType,
+    };
+  }
+
+  private async getTasksCompletedTrend(
+    projectScope: Prisma.ReportWhereInput,
+    since: Date,
+  ) {
+    const reports = await this.prisma.report.findMany({
+      where: { ...projectScope, startDate: { gte: since } },
+      select: {
+        startDate: true,
+        currentVersion: {
+          select: {
+            tasks: {
+              where: { status: 'COMPLETED', isFutureTask: false },
+              select: { id: true },
+            },
+          },
+        },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+
+    const byWeek = new Map<string, number>();
+    for (const r of reports) {
+      const key = r.startDate.toISOString().slice(0, 10);
+      const count = r.currentVersion?.tasks.length ?? 0;
+      byWeek.set(key, (byWeek.get(key) ?? 0) + count);
+    }
+
+    return Array.from(byWeek.entries()).map(([week, completedCount]) => ({
+      week,
+      completedCount,
+    }));
+  }
+
+  private async getStatusByMember(
+    projectScope: Prisma.ReportWhereInput,
+    since: Date,
+  ) {
+    const reports = await this.prisma.report.findMany({
+      where: { ...projectScope, startDate: { gte: since } },
+      select: {
+        status: true,
+        creator: { select: { id: true, username: true } },
+      },
+    });
+
+    const byMember = new Map<
+      number,
+      {
+        userId: number;
+        username: string;
+        draft: number;
+        submitted: number;
+        needsCorrection: number;
+        approved: number;
+      }
+    >();
+
+    for (const r of reports) {
+      const key = r.creator.id;
+      if (!byMember.has(key)) {
+        byMember.set(key, {
+          userId: key,
+          username: r.creator.username,
+          draft: 0,
+          submitted: 0,
+          needsCorrection: 0,
+          approved: 0,
+        });
+      }
+      const bucket = byMember.get(key)!;
+      if (r.status === ReportVersionStatus.DRAFT) bucket.draft++;
+      else if (r.status === ReportVersionStatus.SUBMITTED) bucket.submitted++;
+      else if (r.status === ReportVersionStatus.NEEDS_CORRECTION)
+        bucket.needsCorrection++;
+      else if (r.status === ReportVersionStatus.APPROVED) bucket.approved++;
+    }
+
+    return Array.from(byMember.values());
+  }
+
+  private async getWorkloadByProject(
+    projectScope: Prisma.ReportWhereInput,
+    since: Date,
+  ) {
+    const reports = await this.prisma.report.findMany({
+      where: { ...projectScope, startDate: { gte: since } },
+      select: {
+        project: { select: { id: true, name: true } },
+        currentVersion: { select: { tasks: { select: { id: true } } } },
+      },
+    });
+
+    const byProject = new Map<
+      number,
+      { projectId: number; projectName: string; taskCount: number }
+    >();
+    for (const r of reports) {
+      const count = r.currentVersion?.tasks.length ?? 0;
+      const existing = byProject.get(r.project.id);
+      if (existing) {
+        existing.taskCount += count;
+      } else {
+        byProject.set(r.project.id, {
+          projectId: r.project.id,
+          projectName: r.project.name,
+          taskCount: count,
+        });
+      }
+    }
+    return Array.from(byProject.values());
+  }
+
+  private async getTimeByTaskType(
+    projectScope: Prisma.ReportWhereInput,
+    since: Date,
+  ) {
+    const grouped = await this.prisma.task.groupBy({
+      by: ['type'],
+      where: {
+        isFutureTask: false,
+        reportVersion: {
+          currentOf: { isNot: null },
+          report: { ...projectScope, startDate: { gte: since } },
+        },
+      },
+      _sum: { timeSpent: true },
+    });
+
+    return grouped.map((g) => ({
+      taskType: g.type,
+      hours: Number(g._sum.timeSpent ?? 0),
+    }));
+  }
+
+  // ---------------------------------------------------------------------
+  // Dashboard: activity feed
+  // ---------------------------------------------------------------------
+
+  async getRecentActivity(limit: number, user: RequestUser) {
+    const projectScope = this.projectScopeFilter(user);
+
+    const comments = await this.prisma.comment.findMany({
+      where: { reportVersion: { report: projectScope } },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        reviewer: { select: { username: true } },
+        reportVersion: {
+          select: {
+            report: {
+              select: { id: true, creator: { select: { username: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    return comments.map((c) => ({
+      id: c.id,
+      reportId: c.reportVersion.report.id,
+      action:
+        c.action === 'APPROVE'
+          ? ('approved' as const)
+          : ('needs_correction' as const),
+      actorUsername: c.reviewer.username,
+      targetUsername: c.reportVersion.report.creator.username,
+      createdAt: c.createdAt.toISOString(),
+    }));
+  }
+
+  // ---------------------------------------------------------------------
+  // Shared scoping helpers
+  // ---------------------------------------------------------------------
+
+  private projectScopeFilter(user: RequestUser): Prisma.ReportWhereInput {
+    if (user.role === Role.TEAM_MEMBER) return { createdBy: user.userId };
+    if (user.role === Role.MANAGER)
+      return { project: { createdBy: user.userId } };
+    return {};
+  }
+
+  private async getExpectedSubmitters(user: RequestUser) {
+    const projectWhere: Prisma.ProjectWhereInput =
+      user.role === Role.MANAGER ? { createdBy: user.userId } : {};
+
+    const assignments = await this.prisma.assignedEmployee.findMany({
+      where: { project: projectWhere },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+    return assignments.map((a) => ({ id: a.userId }));
+  }
+
+  private weeksAgo(n: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() - n * 7);
+    d.setHours(0, 0, 0, 0);
+    return d;
   }
 }

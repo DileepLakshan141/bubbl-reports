@@ -22,6 +22,7 @@ import { Role } from '../generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/auth.guard';
 import { SubmitReportDto } from './dto/submit-report.dto';
 import { SaveDraftDto } from './dto/save-draft.dto';
+import * as userTypes from '../../types/user.types';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('report')
@@ -31,6 +32,39 @@ export class ReportController {
   @Post('draft')
   createDraft(@Body() dto: CreateDraftDto, @Req() req) {
     return this.reportsService.createDraft(dto, req.user);
+  }
+
+  @Roles(Role.MANAGER, Role.ADMIN)
+  @Get('dashboard/summary')
+  getDashboardSummary(
+    @Query('week') week: string | undefined,
+    @Req() req: userTypes.AuthenticatedRequest,
+  ) {
+    return this.reportsService.getDashboardSummary(week, req.user);
+  }
+
+  @Roles(Role.MANAGER, Role.ADMIN)
+  @Get('dashboard/insights')
+  getDashboardInsights(
+    @Query('weeks') weeks: string | undefined,
+    @Req() req: userTypes.AuthenticatedRequest,
+  ) {
+    return this.reportsService.getDashboardInsights(
+      weeks ? Number(weeks) : 8,
+      req.user,
+    );
+  }
+
+  @Roles(Role.MANAGER, Role.ADMIN)
+  @Get('dashboard/activity')
+  getRecentActivity(
+    @Query('limit') limit: string | undefined,
+    @Req() req: userTypes.AuthenticatedRequest,
+  ) {
+    return this.reportsService.getRecentActivity(
+      limit ? Number(limit) : 10,
+      req.user,
+    );
   }
 
   @Post(':id/submit')

@@ -285,7 +285,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
           <Field>
             <FieldLabel>Start date</FieldLabel>
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <div className="flex items-center gap-2 px-3 py-2 border rounded-md w-full justify-start text-left font-normal select-none cursor-pointer">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {lockedStartDate ? format(lockedStartDate, "PPP") : "—"}
@@ -300,7 +300,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
           <Field>
             <FieldLabel>End date</FieldLabel>
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <div className="flex items-center gap-2 px-3 py-2 border rounded-md w-full justify-start text-left font-normal select-none cursor-pointer">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {lockedEndDate ? format(lockedEndDate, "PPP") : "—"}
@@ -323,7 +323,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             </h2>
             <Button
               type="button"
-              className="bg-destructive text-pretty capitalize font-semibold"
+              className="w-50 bg-destructive text-pretty capitalize font-semibold"
               size="sm"
               onClick={() => taskFields.append(emptyTask)}
             >
@@ -499,7 +499,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             </h2>
             <Button
               type="button"
-              className="bg-destructive text-pretty capitalize font-semibold"
+              className="w-50 bg-destructive text-pretty capitalize font-semibold"
               size="sm"
               onClick={() => futureTaskFields.append(emptyFutureTask)}
             >
@@ -614,7 +614,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             </h2>
             <Button
               type="button"
-              className="bg-destructive text-pretty capitalize font-semibold"
+              className="w-50 bg-destructive text-pretty capitalize font-semibold"
               size="sm"
               onClick={() =>
                 blockerFields.append({ name: "", isKeyIssue: false })
@@ -670,7 +670,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             </h2>
             <Button
               type="button"
-              className="bg-destructive text-pretty capitalize font-semibold"
+              className="w-50 bg-destructive text-pretty capitalize font-semibold"
               size="sm"
               onClick={() =>
                 achievementFields.append({ name: "", isKeyAchievement: false })
