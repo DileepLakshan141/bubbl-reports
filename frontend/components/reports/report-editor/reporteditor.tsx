@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, KeyboardEvent } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Star, CalendarIcon, OctagonX } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,9 +53,9 @@ interface ReportEditorProps {
 
 const emptyTask = {
   name: "",
-  priority: "Medium",
-  type: "Development",
-  status: "Not Started",
+  priority: PRIORITY_OPTIONS[0] ?? "MEDIUM",
+  type: TASK_TYPE_OPTIONS[0] ?? "DEVELOPMENT",
+  status: TASK_STATUS_OPTIONS[0] ?? "NOT_STARTED",
   plannedProgress: 0,
   actualProgress: 0,
   timePlanned: 0,
@@ -113,6 +113,12 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
   const blockers = watch("blockers");
   const achievements = watch("achievements");
 
+  const preventInvalidIntegerKeys = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (["-", "+", "e", "E", "."].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -127,11 +133,14 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
 
       const { report } = result;
       setReportStatus(report.status);
-      setLockedStartDate(new Date(report.startDate));
-      setLockedEndDate(new Date(report.endDate));
+
+      const cleanStartDate = report.startDate.slice(0, 10);
+      const cleanEndDate = report.endDate.slice(0, 10);
+      setLockedStartDate(parseISO(cleanStartDate));
+      setLockedEndDate(parseISO(cleanEndDate));
 
       if (report.status === "NEEDS_CORRECTION" && report.currentVersion) {
-        const lastComment = report.currentVersion.comments.at(-1);
+        const lastComment = report.currentVersion.comments?.at(-1);
         setRejectionComment(lastComment?.comment ?? null);
       }
 
@@ -139,8 +148,8 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
 
       reset({
         name: report.name,
-        startDate: report.startDate.slice(0, 10),
-        endDate: report.endDate.slice(0, 10),
+        startDate: cleanStartDate,
+        endDate: cleanEndDate,
         tasks: allTasks.filter((t) => !t.isFutureTask),
         futureTasks: allTasks.filter((t) => t.isFutureTask),
         blockers: report.currentVersion?.blockers ?? [],
@@ -218,7 +227,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
     }
 
     toast.success("Report submitted", toastStyle.success);
-    router.push(`/dashboard/reports/${reportId}`);
+    router.push(`/dashboard/assigned-projects`);
   };
 
   const onError = (formErrors: Record<string, unknown>) => {
@@ -243,7 +252,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
         <EmptyTemplate
           icon={OctagonX}
           title="Report is no longer editable!"
-          description="This report is already submitted for the review of the project manager. you can not edit it until your manager change the state of your report."
+          description="This report is already submitted for the review of the project manager. You cannot edit it until your manager changes the status."
           tailwindHeight="h-30"
         />
       </div>
@@ -276,7 +285,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
           <Field>
             <FieldLabel>Start date</FieldLabel>
             <Popover>
-              <PopoverTrigger>
+              <PopoverTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-2 border rounded-md w-full justify-start text-left font-normal select-none cursor-pointer">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {lockedStartDate ? format(lockedStartDate, "PPP") : "—"}
@@ -291,7 +300,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
           <Field>
             <FieldLabel>End date</FieldLabel>
             <Popover>
-              <PopoverTrigger>
+              <PopoverTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-2 border rounded-md w-full justify-start text-left font-normal select-none cursor-pointer">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {lockedEndDate ? format(lockedEndDate, "PPP") : "—"}
@@ -354,7 +363,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Priority" />
                             </SelectTrigger>
                             <SelectContent>
                               {PRIORITY_OPTIONS.map((val) => (
@@ -374,7 +383,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Type" />
                             </SelectTrigger>
                             <SelectContent>
                               {TASK_TYPE_OPTIONS.map((val) => (
@@ -394,7 +403,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
                               {TASK_STATUS_OPTIONS.map((val) => (
@@ -410,6 +419,9 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                     <TableCell>
                       <Input
                         type="number"
+                        min={0}
+                        max={100}
+                        onKeyDown={preventInvalidIntegerKeys}
                         {...register(`tasks.${index}.plannedProgress`, {
                           valueAsNumber: true,
                         })}
@@ -418,6 +430,9 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                     <TableCell>
                       <Input
                         type="number"
+                        min={0}
+                        max={100}
+                        onKeyDown={preventInvalidIntegerKeys}
                         {...register(`tasks.${index}.actualProgress`, {
                           valueAsNumber: true,
                         })}
@@ -426,7 +441,8 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                     <TableCell>
                       <Input
                         type="number"
-                        step="0.5"
+                        min={0}
+                        onKeyDown={preventInvalidIntegerKeys}
                         {...register(`tasks.${index}.timePlanned`, {
                           valueAsNumber: true,
                         })}
@@ -435,7 +451,8 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                     <TableCell>
                       <Input
                         type="number"
-                        step="0.5"
+                        min={0}
+                        onKeyDown={preventInvalidIntegerKeys}
                         {...register(`tasks.${index}.timeSpent`, {
                           valueAsNumber: true,
                         })}
@@ -517,7 +534,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Priority" />
                             </SelectTrigger>
                             <SelectContent>
                               {PRIORITY_OPTIONS.map((o) => (
@@ -537,7 +554,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                         render={({ field: f }) => (
                           <Select value={f.value} onValueChange={f.onChange}>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Type" />
                             </SelectTrigger>
                             <SelectContent>
                               {TASK_TYPE_OPTIONS.map((o) => (
@@ -553,7 +570,8 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
                     <TableCell>
                       <Input
                         type="number"
-                        step="0.5"
+                        min={0}
+                        onKeyDown={preventInvalidIntegerKeys}
                         {...register(`futureTasks.${index}.timePlanned`, {
                           valueAsNumber: true,
                         })}
@@ -724,7 +742,6 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             className="w-full sm:w-auto"
           >
             {saving && <Spinner className="mr-2 size-4" />}
-
             {saving ? "Saving..." : "Save progress"}
           </Button>
 
@@ -734,7 +751,6 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
             className="w-full sm:w-auto"
           >
             {submitting && <Spinner className="mr-2 size-4" />}
-
             {submitting ? "Submitting..." : "Submit report"}
           </Button>
         </div>

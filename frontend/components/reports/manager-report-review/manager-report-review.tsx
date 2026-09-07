@@ -158,7 +158,7 @@ const ManagerReportReview = ({
       toastStyle.success,
     );
     setPendingAction(null);
-    router.push(`/dashboard/team/${report.projectId}`);
+    router.push(`/dashboard/projects/${report.projectId}/team`);
   };
 
   return (

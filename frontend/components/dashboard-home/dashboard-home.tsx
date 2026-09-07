@@ -12,16 +12,18 @@ import { FileIcon, FoldersIcon } from "lucide-react";
 import { findAssignedProjects } from "@/lib/services/project";
 import {
   DashboardHomeProps,
-  ProjectAssignments,
+  ProjectAssignment,
 } from "@/lib/types/project.types";
 import { Spinner } from "../ui/spinner";
 import ProjectCardReadOnly from "../project-card/project-card-read-only";
+import { useRouter } from "next/navigation";
 
 const DashboardHome = ({ userId }: DashboardHomeProps) => {
   const email = useAppSelector((state) => state.auth.user?.email);
 
-  const [projects, setProjects] = useState<ProjectAssignments[]>([]);
+  const [projects, setProjects] = useState<ProjectAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +81,13 @@ const DashboardHome = ({ userId }: DashboardHomeProps) => {
         <ScrollArea className="w-full whitespace-nowrap rounded-md mt-2 mb-6">
           <div className="flex gap-4 pb-4">
             {projects.map((item) => (
-              <ProjectCardReadOnly project={item.project} key={item.id} />
+              <ProjectCardReadOnly
+                project={item.project}
+                key={item.id}
+                onView={() =>
+                  router.push(`/dashboard/assigned-projects/${item.project.id}`)
+                }
+              />
             ))}
           </div>
           <ScrollBar orientation="horizontal" />

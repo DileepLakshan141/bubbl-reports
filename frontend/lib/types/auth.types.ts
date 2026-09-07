@@ -1,4 +1,5 @@
 import { AxiosRequestConfig } from "axios";
+import { LucideIcon } from "lucide-react";
 
 export type Role = "ADMIN" | "MANAGER" | "TEAM_MEMBER";
 
@@ -35,3 +36,16 @@ export interface AuthState {
 }
 
 export type User = UserProfile;
+
+export type NavItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  roles?: Role[];
+};
+
+export type SidebarGroupData = {
+  label: string;
+  items: NavItem[];
+  roles?: Role[];
+};

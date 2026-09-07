@@ -1,30 +1,11 @@
 import {
   LayoutDashboard,
-  ClipboardList,
-  History,
-  Users,
-  ListTodo,
   FolderBookmark,
   UserCog,
-  Settings,
-  Bell,
-  BarChart3,
   LogOut,
   MessageCircleDashedCheck,
 } from "lucide-react";
-
-import type { LucideIcon } from "lucide-react";
-
-export type NavItem = {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-};
-
-export type SidebarGroupData = {
-  label: string;
-  items: NavItem[];
-};
+import { SidebarGroupData } from "../../lib/types/auth.types";
 
 export const sidebarData: SidebarGroupData[] = [
   {
@@ -38,42 +19,31 @@ export const sidebarData: SidebarGroupData[] = [
     ],
   },
   {
-    label: "PROJECTS",
+    label: "PROJECTS & REPORTS",
     items: [
       {
         title: "My Projects",
         url: "/dashboard/projects",
         icon: FolderBookmark,
+        roles: ["MANAGER", "ADMIN"],
       },
       {
         title: "Assigned Projects",
         url: "/dashboard/assigned-projects",
         icon: MessageCircleDashedCheck,
-      },
-    ],
-  },
-  {
-    label: "REPORTS",
-    items: [
-      {
-        title: "My Weekly Report",
-        url: "/dashboard/report",
-        icon: ClipboardList,
-      },
-      {
-        title: "Report History",
-        url: "/dashboard/report-history",
-        icon: History,
+        roles: ["TEAM_MEMBER"],
       },
     ],
   },
   {
     label: "MANAGEMENT",
+    roles: ["ADMIN"],
     items: [
       {
         title: "User Management",
         url: "/dashboard/admin/users",
         icon: UserCog,
+        roles: ["ADMIN"],
       },
     ],
   },

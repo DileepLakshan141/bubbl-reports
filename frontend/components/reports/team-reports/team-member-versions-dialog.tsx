@@ -57,7 +57,9 @@ const TeamMemberVersionsDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Report versions</DialogTitle>
+          <DialogTitle className="text-2xl text-primary">
+            Report versions
+          </DialogTitle>
           <DialogDescription>
             Most recent version first. Click one to review it.
           </DialogDescription>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, ChevronRight } from "lucide-react";
@@ -19,16 +20,20 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 
-import { sidebarData, type NavItem } from "./sidebar-data";
+import { sidebarData } from "./sidebar-data";
 import { logoutUser } from "../../lib/services/logout";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { clearUser } from "../../store/authSlice";
 import { toast } from "sonner";
+import { NavItem, Role } from "../../lib/types/auth.types";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const userRole = useAppSelector((state) => state.auth.user?.role) as
+    | Role
+    | undefined;
 
   const handleLogout = async () => {
     try {
@@ -50,41 +55,30 @@ export function AppSidebar() {
     return pathname === item.url || pathname.startsWith(`${item.url}/`);
   }
 
+  // Filter sidebar groups and items based on the active user role
+  const filteredSidebarData = useMemo(() => {
+    if (!userRole) return [];
+
+    return sidebarData
+      .filter((group) => !group.roles || group.roles.includes(userRole))
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) => !item.roles || item.roles.includes(userRole),
+        ),
+      }))
+      .filter((group) => group.items.length > 0); // Hide group if no items match
+  }, [userRole]);
+
   return (
-    <Sidebar
-      className="
-        border-r
-        border-white/10
-        bg-[#021F59]
-        text-white
-      "
-    >
+    <Sidebar className="border-r border-white/10 bg-[#021F59] text-white">
       <SidebarHeader className="px-4 pt-5 pb-4">
         <Link
           href="/dashboard"
-          className="
-            group
-            flex
-            items-center
-            gap-3
-            rounded-2xl
-            px-3
-            py-3
-            transition-all
-            duration-300
-            hover:bg-white/5
-          "
+          className="group flex items-center gap-3 rounded-2xl px-3 py-3 transition-all duration-300 hover:bg-white/5"
         >
           <div className="w-full flex flex-col justify-center items-center">
-            <h1
-              className="
-                font-bubbl
-                text-3xl
-                leading-none
-                tracking-tight
-                text-white
-              "
-            >
+            <h1 className="font-bubbl text-3xl leading-none tracking-tight text-white">
               bubbl
             </h1>
 
@@ -98,10 +92,9 @@ export function AppSidebar() {
       <Separator className="bg-white/10" />
 
       <SidebarContent className="px-3 py-5">
-        {sidebarData.map((group) => (
+        {filteredSidebarData.map((group) => (
           <SidebarGroup key={group.label} className="mb-3 px-0">
             {/* Group Label */}
-
             <SidebarGroupLabel className="text-xs font-semibold">
               {group.label}
             </SidebarGroupLabel>
@@ -110,7 +103,6 @@ export function AppSidebar() {
               <SidebarMenu className="gap-1.5">
                 {group.items.map((item) => {
                   const isActive = isActiveRoute(item);
-
                   const Icon = item.icon;
 
                   return (
@@ -145,7 +137,6 @@ export function AppSidebar() {
         <Separator className="mb-4 bg-white/10" />
 
         {/* Logout */}
-
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
