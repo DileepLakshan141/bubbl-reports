@@ -61,7 +61,7 @@ Use these to log in and explore the app as each role.
 | Assign team members to projects            | ✅                      | ✅ (own projects)            | ❌                                |
 | Create / edit weekly reports               | ❌                      | ❌                           | ✅ Own reports, current week only |
 | View report content                        | Any report              | Reports under their projects | Only their own reports            |
-| Approve / Request Changes on reports       | ❌                      | ✅                           | ❌                                |
+| Approve / Request Changes on reports       | ✅                      | ✅                           | ❌                                |
 | Manage users (add / remove / assign roles) | ✅                      | ❌                           | ❌                                |
 | View team dashboard & analytics            | ✅                      | ✅ (scoped to own projects)  | ❌                                |
 
