@@ -249,18 +249,21 @@ export class ReportService {
     });
   }
 
-  private defaultWeekRange(referenceDate?: string) {
-    const now = referenceDate ? new Date(referenceDate) : new Date();
-    if (isNaN(now.getTime())) {
-      throw new BadRequestException('Invalid week parameter');
-    }
-    const day = now.getDay();
-    const diffToMonday = day === 0 ? -6 : 1 - day;
+  private defaultWeekRange(week?: string): { start: Date; end: Date } {
+    const now = week ? new Date(`${week}T00:00:00.000Z`) : new Date();
+
+    const day = now.getUTCDay();
+
+    const diffToSunday = now.getUTCDate() - day;
+
     const start = new Date(now);
-    start.setDate(now.getDate() + diffToMonday);
-    start.setHours(0, 0, 0, 0);
+    start.setUTCDate(diffToSunday);
+    start.setUTCHours(0, 0, 0, 0);
+
     const end = new Date(start);
-    end.setDate(start.getDate() + 6);
+    end.setUTCDate(start.getUTCDate() + 6);
+    end.setUTCHours(23, 59, 59, 999);
+
     return { start, end };
   }
 

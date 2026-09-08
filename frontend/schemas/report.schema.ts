@@ -14,6 +14,10 @@ const numericField = (min = 0, max?: number) => {
   }, innerSchema);
 };
 
+const stringOrNullField = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((val) => val ?? "");
+
 export const taskSchema = z.object({
   name: z.string().min(1, "Task name is required"),
   priority: z.string().default("Medium"),
@@ -23,7 +27,7 @@ export const taskSchema = z.object({
   actualProgress: numericField(0, 100),
   timePlanned: numericField(0),
   timeSpent: numericField(0),
-  output: z.string().optional().default(""),
+  output: stringOrNullField,
   isFutureTask: z.boolean().default(false),
 });
 
@@ -52,13 +56,13 @@ export const reportEditorSchema = z.object({
       actualProgress: numericField(0, 100).default(0),
       timePlanned: numericField(0),
       timeSpent: numericField(0).default(0),
-      output: z.string().optional().default(""),
+      output: stringOrNullField,
       isFutureTask: z.boolean().default(true),
     }),
   ),
   blockers: z.array(blockerSchema),
   achievements: z.array(achievementSchema),
-  notes: z.string().optional().default(""),
+  notes: stringOrNullField,
 });
 
 export type ReportEditorValues = z.infer<typeof reportEditorSchema>;

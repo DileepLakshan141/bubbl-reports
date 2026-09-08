@@ -56,6 +56,7 @@ import {
 } from "@/lib/types/report.type";
 import SummaryCard from "../summary-metric-card/summary-metric-card";
 import { ActionBadge } from "../action-badge/action-badge";
+import { format, startOfWeek } from "date-fns";
 
 // Pie chart slices using themed chart variables
 const PIE_COLORS = [
@@ -116,12 +117,17 @@ const TeamDashboard = () => {
   useEffect(() => {
     let cancelled = false;
 
+    const currentWeekMonday = format(
+      startOfWeek(new Date(), { weekStartsOn: 0 }),
+      "yyyy-MM-dd",
+    );
+
     (async () => {
       setLoading(true);
       setError(null);
 
       const [summaryRes, insightsRes, activityRes] = await Promise.all([
-        getDashboardSummary(),
+        getDashboardSummary(currentWeekMonday),
         getDashboardInsights(),
         getRecentActivity(),
       ]);
