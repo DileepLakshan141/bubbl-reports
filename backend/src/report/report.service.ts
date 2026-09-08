@@ -517,8 +517,10 @@ export class ReportService {
       this.prisma.blocker.count({
         where: {
           reportVersion: {
-            currentOf: { isNot: null },
-            report: baseWhere,
+            report: {
+              ...baseWhere,
+              currentVersionId: { not: null },
+            },
           },
         },
       }),
