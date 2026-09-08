@@ -488,6 +488,11 @@ export class ReportService {
     const { start, end } = this.defaultWeekRange(week);
     const projectScope = this.projectScopeFilter(user);
 
+    const baseWhere = {
+      ...projectScope,
+      startDate: { gte: start, lte: end },
+    };
+
     const [
       submitted,
       needsCorrection,
@@ -496,50 +501,49 @@ export class ReportService {
       expectedSubmitters,
     ] = await Promise.all([
       this.prisma.report.count({
-        where: {
-          ...projectScope,
-          startDate: { gte: start, lte: end },
-          status: ReportVersionStatus.SUBMITTED,
-        },
+        where: { ...baseWhere, status: ReportVersionStatus.SUBMITTED },
       }),
       this.prisma.report.count({
-        where: {
-          ...projectScope,
-          startDate: { gte: start, lte: end },
-          status: ReportVersionStatus.NEEDS_CORRECTION,
-        },
+        where: { ...baseWhere, status: ReportVersionStatus.NEEDS_CORRECTION },
       }),
       this.prisma.report.count({
-        where: {
-          ...projectScope,
-          startDate: { gte: start, lte: end },
-          status: ReportVersionStatus.APPROVED,
-        },
+        where: { ...baseWhere, status: ReportVersionStatus.APPROVED },
       }),
       this.prisma.blocker.count({
         where: {
           reportVersion: {
             currentOf: { isNot: null },
-            report: { ...projectScope, startDate: { gte: start, lte: end } },
+            report: baseWhere,
           },
         },
       }),
       this.getExpectedSubmitters(user),
     ]);
 
-    const submittedByExpected = await this.prisma.report.count({
+    const expectedIds = expectedSubmitters.map((m) => m.id);
+
+    const distinctSubmitters = await this.prisma.report.groupBy({
+      by: ['createdBy'],
       where: {
-        ...projectScope,
-        startDate: { gte: start, lte: end },
-        createdBy: { in: expectedSubmitters.map((m) => m.id) },
+        ...baseWhere,
+        createdBy: { in: expectedIds },
+        status: {
+          in: [
+            ReportVersionStatus.SUBMITTED,
+            ReportVersionStatus.NEEDS_CORRECTION,
+            ReportVersionStatus.APPROVED,
+          ],
+        },
       },
     });
+    const submittedCount = distinctSubmitters.length;
+    const totalExpected = expectedSubmitters.length;
 
     return {
       totalSubmittedThisWeek: submitted + needsCorrection + approved,
       compliance: {
-        submitted: submitted + approved,
-        pending: Math.max(expectedSubmitters.length - submittedByExpected, 0),
+        submitted: submittedCount,
+        pending: Math.max(totalExpected - submittedCount, 0),
       },
       needsCorrectionCount: needsCorrection,
       openBlockersCount: blockersCount,
@@ -596,7 +600,7 @@ export class ReportService {
 
     const byWeek = new Map<string, number>();
     for (const r of reports) {
-      const key = r.startDate.toISOString().slice(0, 10);
+      const key = new Date(r.startDate).toISOString().split('T')[0];
       const count = r.currentVersion?.tasks.length ?? 0;
       byWeek.set(key, (byWeek.get(key) ?? 0) + count);
     }
@@ -632,11 +636,13 @@ export class ReportService {
     >();
 
     for (const r of reports) {
+      if (!r.creator) continue;
+
       const key = r.creator.id;
       if (!byMember.has(key)) {
         byMember.set(key, {
           userId: key,
-          username: r.creator.username,
+          username: r.creator.username ?? 'Unknown',
           draft: 0,
           submitted: 0,
           needsCorrection: 0,
@@ -671,6 +677,8 @@ export class ReportService {
       { projectId: number; projectName: string; taskCount: number }
     >();
     for (const r of reports) {
+      if (!r.project) continue;
+
       const count = r.currentVersion?.tasks.length ?? 0;
       const existing = byProject.get(r.project.id);
       if (existing) {
@@ -704,7 +712,7 @@ export class ReportService {
 
     return grouped.map((g) => ({
       taskType: g.type,
-      hours: Number(g._sum.timeSpent ?? 0),
+      hours: g._sum.timeSpent ? Number(g._sum.timeSpent) : 0,
     }));
   }
 
