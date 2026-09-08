@@ -77,7 +77,6 @@ Access control is enforced at the service layer on every request — a user's id
 - **Role-scoped project management** — Admin manages all projects org-wide; Managers manage only the projects they created; Team Members see only projects they're assigned to.
 - **Team dashboard & analytics** — submission compliance, tasks-completed trend, report status breakdown by team member, workload by project, and time logged by task type.
 - **User management (Admin)** — view all users and update their role.
-- **Team member profile view** — report history and stats for an individual team member, accessible to managers.
 - **Current-week-only report creation** — new reports are locked to the current week to prevent backdating; existing Draft/Needs Correction reports remain editable regardless of calendar date.
 
 ---
