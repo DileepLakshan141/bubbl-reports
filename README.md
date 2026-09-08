@@ -54,16 +54,16 @@ Use these to log in and explore the app as each role.
 
 ## Roles & Permissions
 
-| Capability                                 | Admin                   | Manager                      | Team Member                       |
-| ------------------------------------------ | ----------------------- | ---------------------------- | --------------------------------- |
-| View projects                              | All projects (org-wide) | Only projects they created   | Only projects they're assigned to |
-| Create / edit / soft-delete projects       | ✅ Any project          | ✅ Own projects only         | ❌                                |
-| Assign team members to projects            | ✅                      | ✅ (own projects)            | ❌                                |
-| Create / edit weekly reports               | ❌                      | ❌                           | ✅ Own reports, current week only |
-| View report content                        | Any report              | Reports under their projects | Only their own reports            |
-| Approve / Request Changes on reports       | ✅                      | ✅                           | ❌                                |
-| Manage users (add / remove / assign roles) | ✅                      | ❌                           | ❌                                |
-| View team dashboard & analytics            | ✅                      | ✅ (scoped to own projects)  | ❌                                |
+| Capability                           | Admin                   | Manager                      | Team Member                       |
+| ------------------------------------ | ----------------------- | ---------------------------- | --------------------------------- |
+| View projects                        | All projects (org-wide) | Only projects they created   | Only projects they're assigned to |
+| Create / edit / soft-delete projects | ✅ Any project          | ✅ Own projects only         | ❌                                |
+| Assign team members to projects      | ✅                      | ✅ (own projects)            | ❌                                |
+| Create / edit weekly reports         | ❌                      | ❌                           | ✅ Own reports, current week only |
+| View report content                  | Any report              | Reports under their projects | Only their own reports            |
+| Approve / Request Changes on reports | ✅                      | ✅                           | ❌                                |
+| Manage users (assign roles)          | ✅                      | ❌                           | ❌                                |
+| View team dashboard & analytics      | ✅                      | ✅ (scoped to own projects)  | ❌                                |
 
 Access control is enforced at the service layer on every request — a user's identity is always derived from their JWT (`req.user.userId`), never from client-supplied fields.
 
