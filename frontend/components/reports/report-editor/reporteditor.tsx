@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, KeyboardEvent } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  FieldErrors,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Star, CalendarIcon, OctagonX } from "lucide-react";
@@ -110,8 +115,8 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
   const blockerFields = useFieldArray({ control, name: "blockers" });
   const achievementFields = useFieldArray({ control, name: "achievements" });
 
-  const blockers = watch("blockers");
-  const achievements = watch("achievements");
+  const blockers = watch("blockers") ?? [];
+  const achievements = watch("achievements") ?? [];
 
   const preventInvalidIntegerKeys = (e: KeyboardEvent<HTMLInputElement>) => {
     if (["-", "+", "e", "E", "."].includes(e.key)) {
@@ -127,7 +132,9 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
       setLoading(false);
 
       if (!result.success) {
-        toast.error(result.message, toastStyle.error);
+        const errorMessage =
+          "message" in result ? result.message : "Action failed";
+        toast.error(errorMessage, toastStyle.error);
         return;
       }
 
@@ -222,7 +229,9 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
     setSubmitting(false);
 
     if (!result.success) {
-      toast.error(result.message, toastStyle.error);
+      const errorMessage =
+        "message" in result ? result.message : "Action failed";
+      toast.error(errorMessage, toastStyle.error);
       return;
     }
 
@@ -230,7 +239,7 @@ const ReportEditor = ({ reportId }: ReportEditorProps) => {
     router.push(`/dashboard/assigned-projects`);
   };
 
-  const onError = (formErrors: Record<string, unknown>) => {
+  const onError = (formErrors: FieldErrors<ReportEditorValues>) => {
     console.error("Form Validation Errors:", formErrors);
     toast.error(
       "Please fill in all required fields properly.",

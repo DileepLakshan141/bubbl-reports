@@ -51,7 +51,7 @@ const TeamManagementDialog = ({
     setSearching(true);
     searchUsersByEmail(debouncedEmail).then((result) => {
       setSearching(false);
-      if (result.success) setResults(result.users);
+      if (result && result.success) setResults(result.users);
     });
   }, [debouncedEmail]);
 
@@ -59,8 +59,13 @@ const TeamManagementDialog = ({
     setBusyId(userId);
     const result = await assignEmployee(projectId, userId);
     setBusyId(null);
-    if (!result.success) {
-      toast.error(result.message);
+    if (!result || !result.success) {
+      const errorMessage =
+        result && "message" in result && typeof result.message === "string"
+          ? result.message
+          : "Failed to assign member";
+
+      toast.error(errorMessage);
       return;
     }
     toast.success("Member assigned");
@@ -71,8 +76,13 @@ const TeamManagementDialog = ({
     setBusyId(userId);
     const result = await removeEmployee(projectId, userId);
     setBusyId(null);
-    if (!result.success) {
-      toast.error(result.message);
+    if (!result || !result.success) {
+      const errorMessage =
+        result && "message" in result && typeof result.message === "string"
+          ? result.message
+          : "Failed to assign member";
+
+      toast.error(errorMessage);
       return;
     }
     toast.success("Member removed");

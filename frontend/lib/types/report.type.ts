@@ -1,6 +1,7 @@
 // lib/types/report.types.ts
 
 export interface Task {
+  id: number;
   name: string;
   priority: string;
   type: string;
@@ -14,11 +15,13 @@ export interface Task {
 }
 
 export interface Blocker {
+  id: number;
   name: string;
   isKeyIssue: boolean;
 }
 
 export interface Achievement {
+  id: number;
   name: string;
   isKeyAchievement: boolean;
 }
@@ -217,15 +220,6 @@ export interface DashboardInsights {
   statusByMember: StatusByMember[];
   workloadByProject: WorkloadByProject[];
   timeByTaskType: TimeByTaskType[];
-}
-
-export interface ActivityItem {
-  id: number;
-  reportId: number;
-  action: "submitted" | "approved" | "needs_correction";
-  actorUsername: string;
-  targetUsername: string;
-  createdAt: string;
 }
 
 export interface ReportVersionHistoryItem {

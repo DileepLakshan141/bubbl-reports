@@ -33,7 +33,7 @@ import {
   AvatarImage,
 } from "../../ui/avatar";
 
-const ROLE_OPTIONS = ["TEAM_MEMBER", "MANAGER", "ADMIN"];
+const ROLE_OPTIONS: Role[] = ["TEAM_MEMBER", "MANAGER", "ADMIN"];
 
 const UserManagement = () => {
   const [search, setSearch] = useState("");
@@ -101,14 +101,17 @@ const UserManagement = () => {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <Select value={projectFilter} onValueChange={setProjectFilter}>
+        <Select
+          value={projectFilter}
+          onValueChange={(val) => setProjectFilter(val ?? "all")}
+        >
           <SelectTrigger className="w-full sm:w-56">
             <SelectValue placeholder="Filter by project" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All projects</SelectItem>
             {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
+              <SelectItem key={p.id} value={String(p.id)}>
                 {p.name}
               </SelectItem>
             ))}
@@ -171,7 +174,11 @@ const UserManagement = () => {
                   <TableCell>
                     <Select
                       value={u.role}
-                      onValueChange={(role) => handleRoleChange(u.id, role)}
+                      onValueChange={(role) => {
+                        if (role) {
+                          handleRoleChange(u.id, role as Role);
+                        }
+                      }}
                       disabled={updatingId === u.id}
                     >
                       <SelectTrigger className="w-full">

@@ -99,17 +99,24 @@ const ManagerReportReview = ({
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     getReport(reportId).then((result) => {
-      if (result.success) {
+      if (!isMounted) return;
+
+      if (result.success && "report" in result) {
         setReport(result.report);
         setVersion(
           result.report.versions?.find((v) => v.id === versionId) ?? null,
         );
-      } else {
+      } else if ("message" in result) {
         toast.error(result.message, toastStyle.error);
       }
       setLoading(false);
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, [reportId, versionId]);
 
   if (loading)
@@ -196,7 +203,9 @@ const ManagerReportReview = ({
     });
     setSubmitting(false);
     if (!result.success) {
-      toast.error(result.message, toastStyle.error);
+      const errorMessage =
+        "message" in result ? result.message : "Action failed";
+      toast.error(errorMessage, toastStyle.error);
       return;
     }
     toast.success(
@@ -235,11 +244,12 @@ const ManagerReportReview = ({
             {canReview && (
               <div className="w-full sm:w-auto">
                 <Select
+                  value=""
                   onValueChange={(v) =>
                     openConfirm(v as "APPROVE" | "NEEDS_CORRECTION")
                   }
                 >
-                  <SelectTrigger className="w-full sm:w-56  transition-colors">
+                  <SelectTrigger className="w-full sm:w-56 transition-colors">
                     <SelectValue placeholder="Take Review Action" />
                   </SelectTrigger>
                   <SelectContent>
@@ -528,7 +538,7 @@ const ManagerReportReview = ({
                       outerRadius={75}
                       innerRadius={35}
                       paddingAngle={4}
-                      label={({ name, percent }) =>
+                      label={({ name, percent = 0 }) =>
                         `${name} (${(percent * 100).toFixed(0)}%)`
                       }
                     >
@@ -656,9 +666,7 @@ const ManagerReportReview = ({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <DialogClose className="mr-2">
-              <div>Cancel</div>
-            </DialogClose>
+            <DialogClose>Cancel</DialogClose>
             <Button
               variant={
                 pendingAction === "NEEDS_CORRECTION" ? "destructive" : "default"
