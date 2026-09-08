@@ -59,8 +59,7 @@ const ArchiveProjectDialog = ({
           </DialogTitle>
           <DialogDescription>
             Are you sure you want to archive <strong>{projectName}</strong>? It
-            will be marked inactive but its reports and history stay intact —
-            you can reactivate it later.
+            will be marked inactive but its reports and history stay intact.
           </DialogDescription>
         </DialogHeader>
 

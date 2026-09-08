@@ -86,18 +86,32 @@ const ProjectCard = (props: ProjectCardProps) => {
           }
         />
 
-        <Button variant="outline" size="icon" onClick={onUpdate} title="Edit">
-          <Pencil className="h-4 w-4" />
-        </Button>
         <Button
+          type="button"
           variant="outline"
           size="icon"
-          onClick={onDelete}
-          title="Delete"
-          className="hover:border-destructive hover:text-destructive"
+          onClick={onUpdate}
+          title="Edit"
+          aria-label="Edit item"
         >
-          <Trash2 className="h-4 w-4" />
+          <Pencil className="h-4 w-4" />
         </Button>
+
+        {isActive && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onDelete}
+              title="Delete"
+              aria-label="Delete item"
+              className="text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

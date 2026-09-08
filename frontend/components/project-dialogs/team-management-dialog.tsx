@@ -103,7 +103,7 @@ const TeamManagementDialog = ({
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Team members</DialogTitle>
+          <DialogTitle className="text-xl capitalize">Team members</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="members">
@@ -125,7 +125,7 @@ const TeamManagementDialog = ({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <img
-                      src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${m.user.username}`}
+                      src={`https://api.dicebear.com/10.x/loops/svg?seed=${m.user.username}`}
                       className="w-8 h-8 rounded-full shrink-0"
                       alt=""
                     />
