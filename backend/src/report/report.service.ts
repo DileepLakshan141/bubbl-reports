@@ -57,32 +57,35 @@ export class ReportService {
       throw new BadRequestException('A report already exists for this week');
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const report = await tx.report.create({
-        data: {
-          projectId: dto.projectId,
-          name: dto.name ?? `Week of ${start.toDateString()}`,
-          startDate: targetStartDate,
-          endDate: targetEndDate,
-          status: ReportVersionStatus.DRAFT,
-          createdBy: user.userId,
-        },
-      });
+    return this.prisma.$transaction(
+      async (tx) => {
+        const report = await tx.report.create({
+          data: {
+            projectId: dto.projectId,
+            name: dto.name ?? `Week of ${start.toDateString()}`,
+            startDate: targetStartDate,
+            endDate: targetEndDate,
+            status: ReportVersionStatus.DRAFT,
+            createdBy: user.userId,
+          },
+        });
 
-      const version = await tx.reportVersion.create({
-        data: {
-          reportId: report.id,
-          status: ReportVersionStatus.DRAFT,
-          submittedAt: null,
-        },
-      });
+        const version = await tx.reportVersion.create({
+          data: {
+            reportId: report.id,
+            status: ReportVersionStatus.DRAFT,
+            submittedAt: null,
+          },
+        });
 
-      return tx.report.update({
-        where: { id: report.id },
-        data: { currentVersionId: version.id },
-        include: this.fullInclude(),
-      });
-    });
+        return tx.report.update({
+          where: { id: report.id },
+          data: { currentVersionId: version.id },
+          include: this.fullInclude(),
+        });
+      },
+      { timeout: 15000 },
+    );
   }
 
   async saveDraft(reportId: number, dto: SaveDraftDto, user: RequestUser) {
@@ -115,52 +118,59 @@ export class ReportService {
       t.isFutureTask ? { ...t, actualProgress: 0, timeSpent: 0 } : t,
     );
 
-    return this.prisma.$transaction(async (tx) => {
-      const targetVersionId =
-        currentVersion.status === ReportVersionStatus.DRAFT
-          ? currentVersion.id
-          : (
-              await tx.reportVersion.create({
-                data: {
-                  reportId,
-                  status: ReportVersionStatus.DRAFT,
-                  submittedAt: null,
-                },
-              })
-            ).id;
+    return this.prisma.$transaction(
+      async (tx) => {
+        const targetVersionId =
+          currentVersion.status === ReportVersionStatus.DRAFT
+            ? currentVersion.id
+            : (
+                await tx.reportVersion.create({
+                  data: {
+                    reportId,
+                    status: ReportVersionStatus.DRAFT,
+                    submittedAt: null,
+                  },
+                })
+              ).id;
 
-      await this.tasksService.replaceMany(tx, targetVersionId, normalizedTasks);
-      await this.blockersService.replaceMany(
-        tx,
-        targetVersionId,
-        dto.blockers ?? [],
-      );
-      await this.achievementsService.replaceMany(
-        tx,
-        targetVersionId,
-        dto.achievements ?? [],
-      );
+        await this.tasksService.replaceMany(
+          tx,
+          targetVersionId,
+          normalizedTasks,
+        );
+        await this.blockersService.replaceMany(
+          tx,
+          targetVersionId,
+          dto.blockers ?? [],
+        );
+        await this.achievementsService.replaceMany(
+          tx,
+          targetVersionId,
+          dto.achievements ?? [],
+        );
 
-      await tx.optionalNote.deleteMany({
-        where: { reportVersionId: targetVersionId },
-      });
-      if (dto.notes) {
-        await tx.optionalNote.create({
-          data: { reportVersionId: targetVersionId, content: dto.notes },
+        await tx.optionalNote.deleteMany({
+          where: { reportVersionId: targetVersionId },
         });
-      }
+        if (dto.notes) {
+          await tx.optionalNote.create({
+            data: { reportVersionId: targetVersionId, content: dto.notes },
+          });
+        }
 
-      return tx.report.update({
-        where: { id: reportId },
-        data: {
-          name: dto.name ?? undefined,
-          startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-          endDate: dto.endDate ? new Date(dto.endDate) : undefined,
-          currentVersionId: targetVersionId, // now points to new
-        },
-        include: this.fullInclude(),
-      });
-    });
+        return tx.report.update({
+          where: { id: reportId },
+          data: {
+            name: dto.name ?? undefined,
+            startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+            endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+            currentVersionId: targetVersionId, // now points to new
+          },
+          include: this.fullInclude(),
+        });
+      },
+      { timeout: 15000 },
+    );
   }
 
   async submit(reportId: number, dto: SubmitReportDto, user: RequestUser) {
@@ -193,59 +203,66 @@ export class ReportService {
       t.isFutureTask ? { ...t, actualProgress: 0, timeSpent: 0 } : t,
     );
 
-    return this.prisma.$transaction(async (tx) => {
-      const targetVersionId =
-        currentVersion.status === ReportVersionStatus.DRAFT
-          ? currentVersion.id
-          : (
-              await tx.reportVersion.create({
-                data: {
-                  reportId,
-                  status: ReportVersionStatus.SUBMITTED,
-                  submittedAt: new Date(),
-                },
-              })
-            ).id;
-      await this.tasksService.replaceMany(tx, targetVersionId, normalizedTasks);
-      await this.blockersService.replaceMany(
-        tx,
-        targetVersionId,
-        dto.blockers ?? [],
-      );
-      await this.achievementsService.replaceMany(
-        tx,
-        targetVersionId,
-        dto.achievements ?? [],
-      );
+    return this.prisma.$transaction(
+      async (tx) => {
+        const targetVersionId =
+          currentVersion.status === ReportVersionStatus.DRAFT
+            ? currentVersion.id
+            : (
+                await tx.reportVersion.create({
+                  data: {
+                    reportId,
+                    status: ReportVersionStatus.SUBMITTED,
+                    submittedAt: new Date(),
+                  },
+                })
+              ).id;
+        await this.tasksService.replaceMany(
+          tx,
+          targetVersionId,
+          normalizedTasks,
+        );
+        await this.blockersService.replaceMany(
+          tx,
+          targetVersionId,
+          dto.blockers ?? [],
+        );
+        await this.achievementsService.replaceMany(
+          tx,
+          targetVersionId,
+          dto.achievements ?? [],
+        );
 
-      await tx.optionalNote.deleteMany({
-        where: { reportVersionId: targetVersionId },
-      });
-      if (dto.notes) {
-        await tx.optionalNote.create({
-          data: { reportVersionId: targetVersionId, content: dto.notes },
+        await tx.optionalNote.deleteMany({
+          where: { reportVersionId: targetVersionId },
         });
-      }
+        if (dto.notes) {
+          await tx.optionalNote.create({
+            data: { reportVersionId: targetVersionId, content: dto.notes },
+          });
+        }
 
-      if (currentVersion.status === ReportVersionStatus.DRAFT) {
-        await tx.reportVersion.update({
-          where: { id: targetVersionId },
+        if (currentVersion.status === ReportVersionStatus.DRAFT) {
+          await tx.reportVersion.update({
+            where: { id: targetVersionId },
+            data: {
+              status: ReportVersionStatus.SUBMITTED,
+              submittedAt: new Date(),
+            },
+          });
+        }
+
+        return tx.report.update({
+          where: { id: reportId },
           data: {
             status: ReportVersionStatus.SUBMITTED,
-            submittedAt: new Date(),
+            currentVersionId: targetVersionId,
           },
+          include: this.fullInclude(),
         });
-      }
-
-      return tx.report.update({
-        where: { id: reportId },
-        data: {
-          status: ReportVersionStatus.SUBMITTED,
-          currentVersionId: targetVersionId,
-        },
-        include: this.fullInclude(),
-      });
-    });
+      },
+      { timeout: 15000 },
+    );
   }
 
   private defaultWeekRange(referenceDate?: string) {
@@ -421,25 +438,28 @@ export class ReportService {
         ? ReportVersionStatus.APPROVED
         : ReportVersionStatus.NEEDS_CORRECTION;
 
-    return this.prisma.$transaction(async (tx) => {
-      await tx.comment.create({
-        data: {
-          reportVersionId: report.currentVersionId!,
-          reviewerId: user.userId,
-          action: dto.action,
-          comment: dto.comment ?? 'Approved',
-        },
-      });
-      await tx.reportVersion.update({
-        where: { id: report.currentVersionId! },
-        data: { status: newStatus },
-      });
-      return tx.report.update({
-        where: { id: reportId },
-        data: { status: newStatus },
-        include: this.fullInclude(),
-      });
-    });
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.comment.create({
+          data: {
+            reportVersionId: report.currentVersionId!,
+            reviewerId: user.userId,
+            action: dto.action,
+            comment: dto.comment ?? 'Approved',
+          },
+        });
+        await tx.reportVersion.update({
+          where: { id: report.currentVersionId! },
+          data: { status: newStatus },
+        });
+        return tx.report.update({
+          where: { id: reportId },
+          data: { status: newStatus },
+          include: this.fullInclude(),
+        });
+      },
+      { timeout: 15000 },
+    );
   }
 
   private fullInclude() {
