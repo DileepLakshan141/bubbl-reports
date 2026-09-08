@@ -134,7 +134,11 @@ Create a `.env.local` file:
 
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:3000"
-JWT_SECRET="same-secret-as-backend"
+ACCESS_TOKEN_COOKIE=access_token <cookie saved name>
+JWT_ACCESS_SECRET=<sample access key same as backend>
+ACCESS_TOKEN_MAX_AGE=900
+NEST_API_URL=<deployed backend url or dev backend/>
+NODE_ENV=development
 ```
 
 ```bash
