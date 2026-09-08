@@ -153,8 +153,6 @@ The app will be available at `http://localhost:3000`.
 
 - **Manager project scoping is per-creator, not per-team.** A manager only sees projects they personally created. In a multi-manager org this could be relaxed to org-wide visibility, or scoped via an explicit manager→team relationship if one were added to the schema.
 - **Report creation is limited to the current calendar week** by design, to prevent backdated submissions and keep compliance metrics honest. Editing an existing Draft or Needs Correction report remains available regardless of the calendar date.
-- **User invite flow is simplified** — users are created directly by an Admin rather than via an email invitation flow.
-- **Automated RBAC test coverage** could be expanded — the highest-value scenario to verify is that a Team Member cannot access another Team Member's report by ID, and that a Manager cannot update a project they didn't create.
 
 ---
 
