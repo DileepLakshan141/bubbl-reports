@@ -39,15 +39,16 @@ export class ReportService {
       throw new ForbiddenException('You are not assigned to this project');
     }
 
-    const { start, end } = this.defaultWeekRange(dto.startDate ?? undefined);
-
+    const { start, end } = this.defaultWeekRange();
+    const targetStartDate = dto.startDate ? new Date(dto.startDate) : start;
+    const targetEndDate = dto.endDate ? new Date(dto.endDate) : end;
     const existingReport = await this.prisma.report.findFirst({
       where: {
         projectId: dto.projectId,
         createdBy: user.userId,
         startDate: {
-          gte: start,
-          lte: end,
+          gte: targetStartDate,
+          lte: targetEndDate,
         },
       },
     });
@@ -60,9 +61,9 @@ export class ReportService {
       const report = await tx.report.create({
         data: {
           projectId: dto.projectId,
-          name: dto.name ?? `Week of ${start.toISOString().split('T')[0]}`,
-          startDate: start,
-          endDate: end,
+          name: dto.name ?? `Week of ${start.toDateString()}`,
+          startDate: targetStartDate,
+          endDate: targetEndDate,
           status: ReportVersionStatus.DRAFT,
           createdBy: user.userId,
         },
@@ -271,37 +272,26 @@ export class ReportService {
   //   return { start, end };
   // }
 
-  private defaultWeekRange(weekOrDate?: string | Date): {
-    start: Date;
-    end: Date;
-  } {
-    let baseDate: Date;
+  private defaultWeekRange(referenceDate?: string) {
+    const now = referenceDate ? new Date(referenceDate) : new Date();
 
-    if (!weekOrDate) {
-      baseDate = new Date();
-    } else if (weekOrDate instanceof Date) {
-      baseDate = new Date(weekOrDate);
-    } else if (weekOrDate.includes('T')) {
-      baseDate = new Date(weekOrDate);
-    } else {
-      baseDate = new Date(`${weekOrDate}T00:00:00.000Z`);
+    if (isNaN(now.getTime())) {
+      throw new BadRequestException('Invalid week parameter');
     }
 
-    // Fallback if invalid date string passed
-    if (isNaN(baseDate.getTime())) {
-      baseDate = new Date();
-    }
+    const day = now.getDay();
 
-    const day = baseDate.getUTCDay();
-    const diffToSunday = baseDate.getUTCDate() - day;
+    const diffToMonday = day === 0 ? -6 : 1 - day;
 
-    const start = new Date(baseDate);
-    start.setUTCDate(diffToSunday);
-    start.setUTCHours(0, 0, 0, 0);
+    const start = new Date(now);
+
+    start.setDate(now.getDate() + diffToMonday);
+
+    start.setHours(0, 0, 0, 0);
 
     const end = new Date(start);
-    end.setUTCDate(start.getUTCDate() + 6);
-    end.setUTCHours(23, 59, 59, 999);
+
+    end.setDate(start.getDate() + 6);
 
     return { start, end };
   }
