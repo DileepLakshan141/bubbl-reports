@@ -39,17 +39,15 @@ export class ReportService {
       throw new ForbiddenException('You are not assigned to this project');
     }
 
-    const { start, end } = this.defaultWeekRange();
-    const targetStartDate = dto.startDate ? new Date(dto.startDate) : start;
-    const targetEndDate = dto.endDate ? new Date(dto.endDate) : end;
+    const { start, end } = this.defaultWeekRange(dto.startDate ?? undefined);
 
     const existingReport = await this.prisma.report.findFirst({
       where: {
         projectId: dto.projectId,
         createdBy: user.userId,
         startDate: {
-          gte: targetStartDate,
-          lte: targetEndDate,
+          gte: start,
+          lte: end,
         },
       },
     });
@@ -62,9 +60,9 @@ export class ReportService {
       const report = await tx.report.create({
         data: {
           projectId: dto.projectId,
-          name: dto.name ?? `Week of ${start.toDateString()}`,
-          startDate: targetStartDate,
-          endDate: targetEndDate,
+          name: dto.name ?? `Week of ${start.toISOString().split('T')[0]}`,
+          startDate: start,
+          endDate: end,
           status: ReportVersionStatus.DRAFT,
           createdBy: user.userId,
         },
@@ -249,14 +247,55 @@ export class ReportService {
     });
   }
 
-  private defaultWeekRange(week?: string): { start: Date; end: Date } {
-    const now = week ? new Date(`${week}T00:00:00.000Z`) : new Date();
+  // private defaultWeekRange(referenceDate?: string) {
+  //   const now = referenceDate ? new Date(referenceDate) : new Date();
 
-    const day = now.getUTCDay();
+  //   if (isNaN(now.getTime())) {
+  //     throw new BadRequestException('Invalid week parameter');
+  //   }
 
-    const diffToSunday = now.getUTCDate() - day;
+  //   const day = now.getDay();
 
-    const start = new Date(now);
+  //   const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  //   const start = new Date(now);
+
+  //   start.setDate(now.getDate() + diffToMonday);
+
+  //   start.setHours(0, 0, 0, 0);
+
+  //   const end = new Date(start);
+
+  //   end.setDate(start.getDate() + 6);
+
+  //   return { start, end };
+  // }
+
+  private defaultWeekRange(weekOrDate?: string | Date): {
+    start: Date;
+    end: Date;
+  } {
+    let baseDate: Date;
+
+    if (!weekOrDate) {
+      baseDate = new Date();
+    } else if (weekOrDate instanceof Date) {
+      baseDate = new Date(weekOrDate);
+    } else if (weekOrDate.includes('T')) {
+      baseDate = new Date(weekOrDate);
+    } else {
+      baseDate = new Date(`${weekOrDate}T00:00:00.000Z`);
+    }
+
+    // Fallback if invalid date string passed
+    if (isNaN(baseDate.getTime())) {
+      baseDate = new Date();
+    }
+
+    const day = baseDate.getUTCDay();
+    const diffToSunday = baseDate.getUTCDate() - day;
+
+    const start = new Date(baseDate);
     start.setUTCDate(diffToSunday);
     start.setUTCHours(0, 0, 0, 0);
 

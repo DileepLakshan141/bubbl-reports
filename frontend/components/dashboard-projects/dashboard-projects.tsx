@@ -53,7 +53,7 @@ const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
       {/* my projects */}
       <div className="w-full flex justify-between items-start mb-1">
         <div>
-          <h1 className="text:text-xl md:text-2xl font-semibold font-bubbl mx-3">
+          <h1 className="text-xl md:text-2xl font-semibold font-bubbl mx-3">
             My Projects
           </h1>
           <p className="text-xs text-muted-foreground mx-3">
@@ -65,7 +65,8 @@ const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
 
         <CreateProjectDialog onCreated={loadProjects} />
       </div>
-      <Separator className="mt-2" />
+
+      <Separator className="mt-2 mb-4" />
 
       {loading ? (
         <div className="w-full h-60 flex justify-center items-center text-muted-foreground text-sm">
@@ -81,23 +82,21 @@ const DashboardProjects = ({ userId, userRole }: DashboardProjectsProps) => {
           />
         </div>
       ) : (
-        <ScrollArea className="w-full whitespace-nowrap rounded-md mt-2 mb-6">
-          <div className="flex gap-4 pb-4">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                {...project}
-                onView={() => router.push(`/dashboard/projects/${project.id}`)}
-                onReview={() =>
-                  router.push(`/dashboard/projects/${project.id}/team`)
-                }
-                onUpdate={() => setEditingProjectId(project.id)}
-                onDelete={() => setArchivingProject(project)}
-                onTeamChanged={loadProjects}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 py-2">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              {...project}
+              onView={() => router.push(`/dashboard/projects/${project.id}`)}
+              onReview={() =>
+                router.push(`/dashboard/projects/${project.id}/team`)
+              }
+              onUpdate={() => setEditingProjectId(project.id)}
+              onDelete={() => setArchivingProject(project)}
+              onTeamChanged={loadProjects}
+            />
+          ))}
+        </div>
       )}
 
       {editingProjectId !== null && (
