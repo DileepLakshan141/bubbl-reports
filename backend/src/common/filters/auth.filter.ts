@@ -85,6 +85,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
             message: 'This action references a record that does not exist',
           };
         default:
+          this.logger.error(
+            `Unhandled Prisma error code: ${exception.code}`,
+            JSON.stringify(exception.meta),
+          );
           return {
             statusCode: HttpStatus.BAD_REQUEST,
             error: 'Bad Request',
